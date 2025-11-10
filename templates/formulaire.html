@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictionnaire Kabyè Collaboratif</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            color: #2c5530; 
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group { 
+            margin-bottom: 20px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600;
+            color: #333;
+        }
+        input, select, textarea { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 6px; 
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        button { 
+            background: #4CAF50; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        button:hover { 
+            background: #45a049; 
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            padding: 15px; 
+            border-radius: 6px; 
+            margin-top: 20px;
+            border: 1px solid #c3e6cb;
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            padding: 15px; 
+            border-radius: 6px; 
+            margin-top: 20px;
+            border: 1px solid #f5c6cb;
+        }
+        .caracteres-speciaux {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        .btn-special {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-special:hover {
+            background: #0b7dda;
+        }
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .nav a:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Dictionnaire Kabyè Collaboratif</h1>
+        
+        <div class="nav">
+            <a href="/">➕ Ajouter un mot</a>
+            <a href="/mots">📖 Voir les mots</a>
+        </div>
+
+        <form id="formMot">
+            <div class="form-group">
+                <label for="mot_kabye">Mot Kabyè *</label>
+                <input type="text" id="mot_kabye" name="mot_kabye" required 
+                       placeholder="Ex: aalayu">
+            </div>
+            
+            <div class="form-group">
+                <label for="api">Prononciation (API)</label>
+                <input type="text" id="api" name="api" 
+                       placeholder="Ex: [âlâyú]">
+                <small>Caractères spéciaux :</small>
+                <div class="caracteres-speciaux">
+                    <button type="button" onclick="insererCaractere('ɛ')" class="btn-special">ɛ</button>
+                    <button type="button" onclick="insererCaractere('ɩ')" class="btn-special">ɩ</button>
+                    <button type="button" onclick="insererCaractere('ɔ')" class="btn-special">ɔ</button>
+                    <button type="button" onclick="insererCaractere('ŋ')" class="btn-special">ŋ</button>
+                    <button type="button" onclick="insererCaractere('ɣ')" class="btn-special">ɣ</button>
+                    <button type="button" onclick="insererCaractere('Ɛ')" class="btn-special">Ɛ</button>
+                    <button type="button" onclick="insererCaractere('Ɩ')" class="btn-special">Ɩ</button>
+                    <button type="button" onclick="insererCaractere('Ɔ')" class="btn-special">Ɔ</button>
+                    <button type="button" onclick="insererCaractere('Ŋ')" class="btn-special">Ŋ</button>
+                    <button type="button" onclick="insererCaractere('Ɣ')" class="btn-special">Ɣ</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="traduction_francaise">Traduction française *</label>
+                <textarea id="traduction_francaise" name="traduction_francaise" 
+                         rows="3" required placeholder="Traduction en français"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="categorie_grammaticale">Catégorie grammaticale</label>
+                <select id="categorie_grammaticale" name="categorie_grammaticale">
+                    <option value="">-- Choisir --</option>
+                    <option value="nom">Nom</option>
+                    <option value="verbe">Verbe</option>
+                    <option value="adjectif">Adjectif</option>
+                    <option value="adverbe">Adverbe</option>
+                    <option value="préfixe">Préfixe</option>
+                    <option value="suffixe">Suffixe</option>
+                    <option value="interjection">Interjection</option>
+                    <option value="pronom">Pronom</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="exemple_usage">Exemple d'usage</label>
+                <textarea id="exemple_usage" name="exemple_usage" rows="3" 
+                         placeholder="Phrase complète en kabyè avec contexte"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="verifie_par">Votre nom/pseudo *</label>
+                <input type="text" id="verifie_par" name="verifie_par" required 
+                       placeholder="Votre nom pour crédit">
+            </div>
+            
+            <button type="submit">💾 Sauvegarder le mot</button>
+        </form>
+        
+        <div id="message"></div>
+    </div>
+
+    <script>
+        function insererCaractere(caractere) {
+            const apiInput = document.getElementById('api');
+            const start = apiInput.selectionStart;
+            const end = apiInput.selectionEnd;
+            apiInput.value = apiInput.value.substring(0, start) + caractere + apiInput.value.substring(end);
+            apiInput.focus();
+            apiInput.setSelectionRange(start + caractere.length, start + caractere.length);
+        }
+
+        document.getElementById('formMot').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Sauvegarde...';
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData);
+            
+            fetch('/sauvegarder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                const messageDiv = document.getElementById('message');
+                if (result.success) {
+                    messageDiv.innerHTML = `<div class="success">${result.message}</div>`;
+                    document.getElementById('formMot').reset();
+                } else {
+                    messageDiv.innerHTML = `<div class="error">❌ Erreur: ${result.error}</div>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('message').innerHTML = '<div class="error">❌ Erreur de connexion</div>';
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '💾 Sauvegarder le mot';
+            });
+        });
+    </script>
+</body>
+</html>
