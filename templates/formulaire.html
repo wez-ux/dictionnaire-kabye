@@ -26,6 +26,7 @@
         }
         .form-group { 
             margin-bottom: 20px; 
+            position: relative;
         }
         label { 
             display: block; 
@@ -77,27 +78,80 @@
             border: 1px solid #f5c6cb;
         }
         .caracteres-speciaux {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin: 10px 0;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr); /* 6 boutons par ligne */
+            gap: 8px; /* bon espacement entre les boutons */
+            margin-top: 8px;
+            justify-items: center; /* centre les boutons dans chaque case */
         }
+
         .btn-special {
             background: #2196F3;
             color: white;
             border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 18px;
+            height: 38px;
+            width: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            transition: transform 0.1s ease-in-out, background 0.3s;
         }
+
         .btn-special:hover {
             background: #0b7dda;
+            transform: scale(1.1);
         }
+
+        .edition-banner {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .image-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .btn-supprimer {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-supprimer:hover {
+            background: #c82333;
+        }
+        
+        .current-image {
+            margin-top: 10px;
+        }
+        
+        .current-image img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+        }
+
         .nav {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
         .nav a {
             padding: 10px 20px;
@@ -105,119 +159,500 @@
             color: white;
             text-decoration: none;
             border-radius: 5px;
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
         }
         .nav a:hover {
             background: #5a6268;
+        }
+        
+        /* Style pour la barre de défilement */
+        .caracteres-speciaux::-webkit-scrollbar {
+            height: 6px;
+        }
+        .caracteres-speciaux::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .caracteres-speciaux::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        .caracteres-speciaux::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .nav a {
+                min-width: 100px;
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+            .btn-special {
+                min-width: 35px;
+                height: 35px;
+                font-size: 12px;
+                padding: 5px 8px;
+            }
+            .caracteres-speciaux {
+                gap: 3px;
+            }
+        }
+
+        /* Pour les très petits écrans */
+        @media (max-width: 400px) {
+            .btn-special {
+                min-width: 32px;
+                height: 32px;
+                font-size: 11px;
+                padding: 4px 6px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📝 Dictionnaire Kabyè Collaboratif</h1>
+        <h1>{% if edition %}✏️ Éditer{% else %}📝 Ajouter{% endif %} un mot Kabyè</h1>
         
         <div class="nav">
             <a href="/">➕ Ajouter un mot</a>
             <a href="/mots">📖 Voir les mots</a>
+            <a href="/statistiques" style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 25px; margin: 0 10px;">
+                📊 Voir les Statistiques
+            </a>
         </div>
 
+        {% if edition and mot %}
+        <div class="edition-banner">
+            <strong>✏️ Mode édition</strong> - Vous modifiez le mot : <strong>"{{ mot.mot_kabye }}"</strong>
+        </div>
+        {% endif %}
+
         <form id="formMot">
+            <form id="formMot" enctype="multipart/form-data">
+            {% if edition and mot %}
+            <input type="hidden" id="mot_id" name="mot_id" value="{{ mot.id }}">
+            {% endif %}
             <div class="form-group">
                 <label for="mot_kabye">Mot Kabyè *</label>
                 <input type="text" id="mot_kabye" name="mot_kabye" required 
+                       value="{{ mot.mot_kabye if mot else '' }}"
                        placeholder="Ex: aalayu">
+                <small>Caractères spéciaux :</small>
+                <div class="caracteres-speciaux" data-target="mot_kabye">
+                    <button type="button" class="btn-special">ɛ</button>
+                    <button type="button" class="btn-special">ɩ</button>
+                    <button type="button" class="btn-special">ɔ</button>
+                    <button type="button" class="btn-special">ŋ</button>
+                    <button type="button" class="btn-special">ʋ</button>
+                    <button type="button" class="btn-special">ɣ</button>
+                    <button type="button" class="btn-special">ɖ</button>
+                    <button type="button" class="btn-special">ñ</button>
+                    <button type="button" class="btn-special">Ɛ</button>
+                    <button type="button" class="btn-special">Ɩ</button>
+                    <button type="button" class="btn-special">Ɔ</button>
+                    <button type="button" class="btn-special">Ŋ</button>
+                    <button type="button" class="btn-special">Ʋ</button>
+                    <button type="button" class="btn-special">Ɣ</button>
+                    <button type="button" class="btn-special">Ɖ</button>
+                    <button type="button" class="btn-special">Ñ</button>
+                </div>
             </div>
             
             <div class="form-group">
                 <label for="api">Prononciation (API)</label>
                 <input type="text" id="api" name="api" 
+                       value="{{ mot.api if mot else '' }}"
                        placeholder="Ex: [âlâyú]">
                 <small>Caractères spéciaux :</small>
-                <div class="caracteres-speciaux">
-                    <button type="button" onclick="insererCaractere('ɛ')" class="btn-special">ɛ</button>
-                    <button type="button" onclick="insererCaractere('ɩ')" class="btn-special">ɩ</button>
-                    <button type="button" onclick="insererCaractere('ɔ')" class="btn-special">ɔ</button>
-                    <button type="button" onclick="insererCaractere('ŋ')" class="btn-special">ŋ</button>
-                    <button type="button" onclick="insererCaractere('ɣ')" class="btn-special">ɣ</button>
-                    <button type="button" onclick="insererCaractere('Ɛ')" class="btn-special">Ɛ</button>
-                    <button type="button" onclick="insererCaractere('Ɩ')" class="btn-special">Ɩ</button>
-                    <button type="button" onclick="insererCaractere('Ɔ')" class="btn-special">Ɔ</button>
-                    <button type="button" onclick="insererCaractere('Ŋ')" class="btn-special">Ŋ</button>
-                    <button type="button" onclick="insererCaractere('Ɣ')" class="btn-special">Ɣ</button>
+                <div class="caracteres-speciaux" data-target="api">
+                    <button type="button" class="btn-special">ɛ</button>
+                    <button type="button" class="btn-special">ɛ́</button>
+                    <button type="button" class="btn-special">ɩ</button>
+                    <button type="button" class="btn-special">ɩ́</button>
+                    <button type="button" class="btn-special">ɔ</button>
+                    <button type="button" class="btn-special">ɔ́</button>
+                    <button type="button" class="btn-special">ŋ</button>
+                    <button type="button" class="btn-special">ʋ</button>
+                    <button type="button" class="btn-special">ʋ́</button>
+                    <button type="button" class="btn-special">ɣ</button>
+                    <button type="button" class="btn-special">ɣ́</button>
+                    <button type="button" class="btn-special">ɖ</button>
+                    <button type="button" class="btn-special">ñ</button>
+                    <button type="button" class="btn-special">̀á</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="variantes_orthographiques">Variantes orthographiques</label>
+                <input type="text" id="variantes_orthographiques" name="variantes_orthographiques" 
+                       value="{{ mot.variantes_orthographiques|join(', ') if mot and mot.variantes_orthographiques else '' }}"
+                       placeholder="Séparées par des virgules (ex: aaleyu, aaleykatay)">
+                <small>Caractères spéciaux :</small>
+                <div class="caracteres-speciaux" data-target="variantes_orthographiques">
+                    <button type="button" class="btn-special">ɛ</button>
+                    <button type="button" class="btn-special">ɩ</button>
+                    <button type="button" class="btn-special">ɔ</button>
+                    <button type="button" class="btn-special">ŋ</button>
+                    <button type="button" class="btn-special">ʋ</button>
+                    <button type="button" class="btn-special">ɣ</button>
+                    <button type="button" class="btn-special">ɖ</button>
+                    <button type="button" class="btn-special">ñ</button>
+                    <button type="button" class="btn-special">Ɛ</button>
+                    <button type="button" class="btn-special">Ɩ</button>
+                    <button type="button" class="btn-special">Ɔ</button>
+                    <button type="button" class="btn-special">Ŋ</button>
+                    <button type="button" class="btn-special">Ʋ</button>
+                    <button type="button" class="btn-special">Ɣ</button>
+                    <button type="button" class="btn-special">Ɖ</button>
+                    <button type="button" class="btn-special">Ñ</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="synonymes">Synonymes</label>
+                <input type="text" id="synonymes" name="synonymes" 
+                       value="{{ mot.synonymes|join(', ') if mot and mot.synonymes else '' }}"
+                       placeholder="Séparés par des virgules">
+                <small>Caractères spéciaux :</small>
+                <div class="caracteres-speciaux" data-target="synonymes">
+                    <button type="button" class="btn-special">ɛ</button>
+                    <button type="button" class="btn-special">ɩ</button>
+                    <button type="button" class="btn-special">ɔ</button>
+                    <button type="button" class="btn-special">ŋ</button>
+                    <button type="button" class="btn-special">ʋ</button>
+                    <button type="button" class="btn-special">ɣ</button>
+                    <button type="button" class="btn-special">ɖ</button>
+                    <button type="button" class="btn-special">ñ</button>
+                    <button type="button" class="btn-special">Ɛ</button>
+                    <button type="button" class="btn-special">Ɩ</button>
+                    <button type="button" class="btn-special">Ɔ</button>
+                    <button type="button" class="btn-special">Ŋ</button>
+                    <button type="button" class="btn-special">Ʋ</button>
+                    <button type="button" class="btn-special">Ɣ</button>
+                    <button type="button" class="btn-special">Ɖ</button>
+                    <button type="button" class="btn-special">Ñ</button>
                 </div>
             </div>
             
             <div class="form-group">
                 <label for="traduction_francaise">Traduction française *</label>
                 <textarea id="traduction_francaise" name="traduction_francaise" 
-                         rows="3" required placeholder="Traduction en français"></textarea>
+                         rows="3" required placeholder="Traduction en français">{{ mot.traduction_francaise if mot else '' }}</textarea>
+
+                <small>Caractères spéciaux :</small>
+                <div class="caracteres-speciaux" data-target="traduction_francaise">
+                    <button type="button" class="btn-special">ɛ</button>
+                    <button type="button" class="btn-special">ɩ</button>
+                    <button type="button" class="btn-special">ɔ</button>
+                    <button type="button" class="btn-special">ŋ</button>
+                    <button type="button" class="btn-special">ʋ</button>
+                    <button type="button" class="btn-special">ɣ</button>
+                    <button type="button" class="btn-special">ɖ</button>
+                    <button type="button" class="btn-special">ñ</button>
+                    <button type="button" class="btn-special">Ɛ</button>
+                    <button type="button" class="btn-special">Ɩ</button>
+                    <button type="button" class="btn-special">Ɔ</button>
+                    <button type="button" class="btn-special">Ŋ</button>
+                    <button type="button" class="btn-special">Ʋ</button>
+                    <button type="button" class="btn-special">Ɣ</button>
+                    <button type="button" class="btn-special">Ɖ</button>
+                    <button type="button" class="btn-special">Ñ</button>
+                </div>
+                
+            </div>
+
+            <div class="form-group">
+                <label for="sens_multiple">Sens multiples</label>
+                <textarea id="sens_multiple" name="sens_multiple" rows="3" 
+                          placeholder="Différents sens séparés par des points-virgules">{{ mot.sens_multiple|join('; ') if mot and mot.sens_multiple else '' }}</textarea>
             </div>
             
             <div class="form-group">
                 <label for="categorie_grammaticale">Catégorie grammaticale</label>
                 <select id="categorie_grammaticale" name="categorie_grammaticale">
                     <option value="">-- Choisir --</option>
-                    <option value="nom">Nom</option>
-                    <option value="verbe">Verbe</option>
-                    <option value="adjectif">Adjectif</option>
-                    <option value="adverbe">Adverbe</option>
-                    <option value="préfixe">Préfixe</option>
-                    <option value="suffixe">Suffixe</option>
-                    <option value="interjection">Interjection</option>
-                    <option value="pronom">Pronom</option>
+                    <option value="nom" {% if mot and mot.categorie_grammaticale == 'nom' %}selected{% endif %}>Nom</option>
+                    <option value="verbe" {% if mot and mot.categorie_grammaticale == 'verbe' %}selected{% endif %}>Verbe</option>
+                    <option value="adjectif" {% if mot and mot.categorie_grammaticale == 'adjectif' %}selected{% endif %}>Adjectif</option>
+                    <option value="adverbe" {% if mot and mot.categorie_grammaticale == 'adverbe' %}selected{% endif %}>Adverbe</option>
+                    <option value="préfixe" {% if mot and mot.categorie_grammaticale == 'préfixe' %}selected{% endif %}>Préfixe</option>
+                    <option value="suffixe" {% if mot and mot.categorie_grammaticale == 'suffixe' %}selected{% endif %}>Suffixe</option>
+                    <option value="interjection" {% if mot and mot.categorie_grammaticale == 'interjection' %}selected{% endif %}>Interjection</option>
+                    <option value="pronom" {% if mot and mot.categorie_grammaticale == 'pronom' %}selected{% endif %}>Pronom</option>
                 </select>
+            </div>
+
+            <div class="form-group">
+                <label for="sous_categorie">Sous-catégorie</label>
+                <input type="text" id="sous_categorie" name="sous_categorie" 
+                       value="{{ mot.sous_categorie if mot else '' }}"
+                       placeholder="Ex: nom propre, verbe transitif, etc.">
             </div>
             
             <div class="form-group">
                 <label for="exemple_usage">Exemple d'usage</label>
                 <textarea id="exemple_usage" name="exemple_usage" rows="3" 
-                         placeholder="Phrase complète en kabyè avec contexte"></textarea>
+                         placeholder="Phrase complète en kabyè avec contexte">{{ mot.exemple_usage if mot else '' }}</textarea>
+                <small>Caractères spéciaux :</small>
+                <div class="caracteres-speciaux" data-target="exemple_usage">
+                    <button type="button" class="btn-special">ɛ</button>
+                    <button type="button" class="btn-special">ɩ</button>
+                    <button type="button" class="btn-special">ɔ</button>
+                    <button type="button" class="btn-special">ŋ</button>
+                    <button type="button" class="btn-special">ʋ</button>
+                    <button type="button" class="btn-special">ɣ</button>
+                    <button type="button" class="btn-special">ɖ</button>
+                    <button type="button" class="btn-special">ñ</button>
+                    <button type="button" class="btn-special">Ɛ</button>
+                    <button type="button" class="btn-special">Ɩ</button>
+                    <button type="button" class="btn-special">Ɔ</button>
+                    <button type="button" class="btn-special">Ŋ</button>
+                    <button type="button" class="btn-special">Ʋ</button>
+                    <button type="button" class="btn-special">Ɣ</button>
+                    <button type="button" class="btn-special">Ɖ</button>
+                    <button type="button" class="btn-special">Ñ</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="traduction_exemple">Traduction de l'exemple</label>
+                <input type="text" id="traduction_exemple" name="traduction_exemple" 
+                       value="{{ mot.traduction_exemple if mot else '' }}"
+                       placeholder="Traduction française de l'exemple d'usage">
+            </div>
+
+            <div class="form-group">
+                <label for="expressions_associees">Expressions associées</label>
+                <textarea id="expressions_associees" name="expressions_associees" rows="3"
+                    placeholder="Format: expression:traduction (une par ligne)&#10;Ex: abaa lady:manoeuvre (personne)">{% if mot and mot.expressions_associees %}{% for expr in mot.expressions_associees %}{{ expr.expression }}:{{ expr.traduction }}{% if not loop.last %}&#10;{% endif %}{% endfor %}{% endif %}</textarea>
+                <div class="caracteres-speciaux" data-target="expressions_associees">
+                    <button type="button" class="btn-special">ɛ</button>
+                    <button type="button" class="btn-special">ɩ</button>
+                    <button type="button" class="btn-special">ɔ</button>
+                    <button type="button" class="btn-special">ŋ</button>
+                    <button type="button" class="btn-special">ʋ</button>
+                    <button type="button" class="btn-special">ɣ</button>
+                    <button type="button" class="btn-special">ɖ</button>
+                    <button type="button" class="btn-special">ñ</button>
+                    <button type="button" class="btn-special">Ɛ</button>
+                    <button type="button" class="btn-special">Ɩ</button>
+                    <button type="button" class="btn-special">Ɔ</button>
+                    <button type="button" class="btn-special">Ŋ</button>
+                    <button type="button" class="btn-special">Ʋ</button>
+                    <button type="button" class="btn-special">Ɣ</button>
+                    <button type="button" class="btn-special">Ɖ</button>
+                    <button type="button" class="btn-special">Ñ</button>
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label for="origine_mot">Origine du mot</label>
+                <input type="text" id="origine_mot" name="origine_mot" 
+                       value="{{ mot.origine_mot if mot else '' }}"
+                       placeholder="Étymologie ou origine du mot">
+            </div>
+
+            <div class="form-group">
+                <label for="image">Image illustrative (optionnel)</label>
+                <input type="file" id="image" name="image" 
+                    accept=".png,.jpg,.jpeg,.gif,.webp"
+                    class="file-input">
+                <small>Formats acceptés: PNG, JPG, JPEG, GIF, WebP (max 5MB)</small>
+
+                {% if edition and mot and mot.image_url %}
+                <div class="current-image">
+                    <p><strong>Image actuelle :</strong></p>
+                    <img src="{{ mot.image_url }}" alt="{{ mot.mot_kabye }}">
+                    <div class="image-controls">
+                        <button type="button" class="btn-supprimer" onclick="supprimerImage()">🗑️ Supprimer cette image</button>
+                    </div>
+                    <input type="hidden" id="supprimer_image" name="supprimer_image" value="false">
+                </div>
+                {% endif %}
+
+                <div id="image-preview" style="margin-top: 10px; display: none;">
+                    <img id="preview-img" src="#" alt="Aperçu" style="max-width: 200px; max-height: 200px; border-radius: 5px;">
+                </div>
+            </div>
+            
+
+            <div class="form-group">
+                <label for="notes_usage">Notes d'usage</label>
+                <textarea id="notes_usage" name="notes_usage" rows="2" 
+                         placeholder="Informations supplémentaires sur l'usage">{{ mot.notes_usage if mot else '' }}</textarea>
+                <small>Caractères spéciaux :</small>
+                <div class="caracteres-speciaux" data-target="notes_usage">
+                    <button type="button" class="btn-special">ɛ</button>
+                    <button type="button" class="btn-special">ɩ</button>
+                    <button type="button" class="btn-special">ɔ</button>
+                    <button type="button" class="btn-special">ŋ</button>
+                    <button type="button" class="btn-special">ʋ</button>
+                    <button type="button" class="btn-special">ɣ</button>
+                    <button type="button" class="btn-special">ɖ</button>
+                    <button type="button" class="btn-special">ñ</button>
+                    <button type="button" class="btn-special">Ɛ</button>
+                    <button type="button" class="btn-special">Ɩ</button>
+                    <button type="button" class="btn-special">Ɔ</button>
+                    <button type="button" class="btn-special">Ŋ</button>
+                    <button type="button" class="btn-special">Ʋ</button>
+                    <button type="button" class="btn-special">Ɣ</button>
+                    <button type="button" class="btn-special">Ɖ</button>
+                    <button type="button" class="btn-special">Ñ</button>
+                </div>
             </div>
             
             <div class="form-group">
                 <label for="verifie_par">Votre nom/pseudo *</label>
                 <input type="text" id="verifie_par" name="verifie_par" required 
+                       value="{{ mot.verifie_par if mot else '' }}"
                        placeholder="Votre nom pour crédit">
+                <!-- Pas de caractères spéciaux pour ce champ -->
             </div>
             
-            <button type="submit">💾 Sauvegarder le mot</button>
+            <button type="submit">
+                {% if edition %}💾 Modifier le mot{% else %}💾 Sauvegarder le mot{% endif %}
+            </button>
+
+            {% if edition %}
+            <button type="button" class="btn-supprimer" style="margin-top: 10px; width: 100%;" onclick="supprimerMot({{ mot.id }})">
+                🗑️ Supprimer ce mot
+            </button>
+            {% endif %}
         </form>
         
         <div id="message"></div>
     </div>
 
     <script>
-        function insererCaractere(caractere) {
-            const apiInput = document.getElementById('api');
-            const start = apiInput.selectionStart;
-            const end = apiInput.selectionEnd;
-            apiInput.value = apiInput.value.substring(0, start) + caractere + apiInput.value.substring(end);
-            apiInput.focus();
-            apiInput.setSelectionRange(start + caractere.length, start + caractere.length);
+        // Fonction pour insérer un caractère dans un champ spécifique
+        function insererCaractere(caractere, champId) {
+            const input = document.getElementById(champId);
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            input.value = input.value.substring(0, start) + caractere + input.value.substring(end);
+            input.focus();
+            input.setSelectionRange(start + caractere.length, start + caractere.length);
         }
 
+        // Initialisation des boutons de caractères spéciaux
+        document.addEventListener('DOMContentLoaded', function() {
+            const groupesCaracteres = document.querySelectorAll('.caracteres-speciaux');
+            
+            groupesCaracteres.forEach(groupe => {
+                const targetId = groupe.getAttribute('data-target');
+                const boutons = groupe.querySelectorAll('.btn-special');
+                
+                boutons.forEach(bouton => {
+                    bouton.addEventListener('click', function() {
+                        insererCaractere(this.textContent, targetId);
+                    });
+                });
+            });
+        });
+
+        // Gestion de l'aperçu de l'image
+        document.getElementById('image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+
+        // Gestion de l'aperçu de l'image
+        document.getElementById('image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+        
+        function supprimerImage() {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette image ?')) {
+                document.getElementById('supprimer_image').value = 'true';
+                document.querySelector('.current-image').style.display = 'none';
+            }
+        }
+        
+        function supprimerMot(motId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce mot ? Cette action est irréversible.')) {
+                fetch(`/supprimer/${motId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(result.message);
+                        window.location.href = '/mots';
+                    } else {
+                        alert('Erreur: ' + result.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Erreur de connexion');
+                });
+            }
+        }
+
+        // Modification de la fonction de soumission
         document.getElementById('formMot').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const submitBtn = this.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Sauvegarde...';
+            submitBtn.textContent = '⏳ ' + ({% if edition %}'Modification...'{% else %}'Sauvegarde...'{% endif %});
             
             const formData = new FormData(this);
-            const data = Object.fromEntries(formData);
             
             fetch('/sauvegarder', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
+                body: formData
             })
             .then(response => response.json())
             .then(result => {
                 const messageDiv = document.getElementById('message');
                 if (result.success) {
                     messageDiv.innerHTML = `<div class="success">${result.message}</div>`;
-                    document.getElementById('formMot').reset();
+                    if (!{% if edition %}true{% else %}false{% endif %}) {
+                        // Mode création : réinitialiser le formulaire
+                        document.getElementById('formMot').reset();
+                        document.getElementById('image-preview').style.display = 'none';
+                    }
                 } else {
                     messageDiv.innerHTML = `<div class="error">❌ Erreur: ${result.error}</div>`;
                 }
@@ -227,9 +662,12 @@
             })
             .finally(() => {
                 submitBtn.disabled = false;
-                submitBtn.textContent = '💾 Sauvegarder le mot';
+                submitBtn.textContent = {% if edition %}'💾 Modifier le mot'{% else %}'💾 Sauvegarder le mot'{% endif %};
             });
         });
+
+        
+       
     </script>
 </body>
 </html>

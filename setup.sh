@@ -22,6 +22,7 @@ chmod +x run.sh
 
 # Configurer Nginx
 sudo tee /etc/nginx/sites-available/dictionnaire-kabye > /dev/null <<EOF
+
 server {
     listen 80;
     server_name _;

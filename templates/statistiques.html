@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiques des Contributions - Dictionnaire Kabyè</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .chart-title {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3rem;
+        }
+
+        .contributors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .contributor-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .contributor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .contributor-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .contributor-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .mini-stat {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .mini-stat .number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .mini-stat .label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .categories-list {
+            margin-top: 15px;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .category-name {
+            color: #555;
+        }
+
+        .category-count {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            padding: 50px;
+        }
+
+        .last-activity {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .contributors-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: #f0f0f0;
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-button">← Retour à l'accueil</a>
+        
+        <div class="header">
+            <h1>📊 Statistiques des Contributions</h1>
+            <p>Suivi de l'évolution des contributions par personne</p>
+        </div>
+
+        <div id="loading" class="loading">
+            Chargement des statistiques...
+        </div>
+
+        <div id="content" style="display: none;">
+            <!-- Cartes de statistiques globales -->
+            <div class="stats-grid" id="global-stats"></div>
+
+            <!-- Graphique d'évolution globale -->
+            <div class="chart-container">
+                <h3 class="chart-title">Évolution des Contributions par Personne</h3>
+                <div id="evolution-chart"></div>
+            </div>
+
+            <!-- Graphique de répartition -->
+            <div class="chart-container">
+                <h3 class="chart-title">Répartition des Contributions</h3>
+                <div id="repartition-chart"></div>
+            </div>
+
+            <!-- Détails par contributeur -->
+            <h2 style="color: white; margin: 30px 0 20px 0; text-align: center;">Détails par Contributeur</h2>
+            <div class="contributors-grid" id="contributors-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let statsData = null;
+
+        // Charger les données statistiques
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/statistiques');
+                statsData = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+                renderGlobalStats();
+                renderEvolutionChart();
+                renderRepartitionChart();
+                renderContributors();
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('loading').innerHTML = 'Erreur lors du chargement des statistiques';
+            }
+        }
+
+        // Afficher les statistiques globales
+        function renderGlobalStats() {
+            const global = statsData.globales;
+            const container = document.getElementById('global-stats');
+            
+            container.innerHTML = `
+                <div class="stat-card">
+                    <h3>📚 Total des Mots</h3>
+                    <span class="stat-number">${global.total_mots}</span>
+                    <span class="stat-label">mots dans le dictionnaire</span>
+                </div>
+                <div class="stat-card">
+                    <h3>👥 Contributeurs</h3>
+                    <span class="stat-number">${global.nombre_contributeurs}</span>
+                    <span class="stat-label">personnes ont contribué</span>
+                </div>
+                <div class="stat-card">
+                    <h3>📈 Moyenne par Personne</h3>
+                    <span class="stat-number">${global.moyenne_mots_par_contributeur.toFixed(1)}</span>
+                    <span class="stat-label">mots par contributeur</span>
+                </div>
+                <div class="stat-card">
+                    <h3>⭐ Contributeurs Actifs</h3>
+                    <span class="stat-number">${global.contributeurs_actifs}</span>
+                    <span class="stat-label">5+ mots contribués</span>
+                </div>
+            `;
+        }
+
+        // Graphique d'évolution
+        function renderEvolutionChart() {
+            const personnes = Object.entries(statsData.par_personne);
+            
+            // Préparer les données pour ApexCharts
+            const series = [];
+            const categories = new Set();
+            
+            personnes.forEach(([nom, data]) => {
+                const evolutionData = [];
+                
+                data.evolution_temporelle.forEach(point => {
+                    categories.add(point.mois);
+                    evolutionData.push(point.total_cumule);
+                });
+                
+                series.push({
+                    name: nom,
+                    data: evolutionData
+                });
+            });
+            
+            const options = {
+                series: series,
+                chart: {
+                    type: 'line',
+                    height: 350,
+                    zoom: {
+                        enabled: true
+                    }
+                },
+                colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'],
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                title: {
+                    text: 'Évolution Cumulative des Contributions',
+                    align: 'left'
+                },
+                grid: {
+                    row: {
+                        colors: ['#f3f3f3', 'transparent'],
+                        opacity: 0.5
+                    },
+                },
+                xaxis: {
+                    categories: Array.from(categories).sort()
+                },
+                yaxis: {
+                    title: {
+                        text: 'Nombre de Mots Cumulé'
+                    }
+                }
+            };
+            
+            const chart = new ApexCharts(document.querySelector("#evolution-chart"), options);
+            chart.render();
+        }
+
+        // Graphique de répartition
+        function renderRepartitionChart() {
+            const personnes = Object.entries(statsData.par_personne);
+            
+            const options = {
+                series: personnes.map(([_, data]) => data.total_mots),
+                chart: {
+                    type: 'donut',
+                    height: 350
+                },
+                labels: personnes.map(([nom, _]) => nom),
+                colors: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'],
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            width: 200
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }],
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            labels: {
+                                show: true,
+                                total: {
+                                    show: true,
+                                    label: 'Total Mots',
+                                    color: '#333'
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            
+            const chart = new ApexCharts(document.querySelector("#repartition-chart"), options);
+            chart.render();
+        }
+
+        // Afficher les détails par contributeur
+        function renderContributors() {
+            const container = document.getElementById('contributors-list');
+            const personnes = Object.entries(statsData.par_personne)
+                .sort((a, b) => b[1].total_mots - a[1].total_mots);
+            
+            container.innerHTML = personnes.map(([nom, data]) => `
+                <div class="contributor-card">
+                    <div class="contributor-header">
+                        <div class="contributor-name">${nom}</div>
+                        <div class="stat-number">${data.total_mots}</div>
+                    </div>
+                    
+                    <div class="contributor-stats">
+                        <div class="mini-stat">
+                            <div class="number">${Object.keys(data.categories).length}</div>
+                            <div class="label">Catégories</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="number">${data.evolution_temporelle.length}</div>
+                            <div class="label">Mois actifs</div>
+                        </div>
+                    </div>
+                    
+                    ${data.derniere_activite ? `
+                        <div class="last-activity">
+                            Dernière activité: ${new Date(data.derniere_activite).toLocaleDateString('fr-FR')}
+                        </div>
+                    ` : ''}
+                    
+                    ${Object.keys(data.categories).length > 0 ? `
+                        <div class="categories-list">
+                            <strong>Répartition par catégorie:</strong>
+                            ${Object.entries(data.categories)
+                                .sort((a, b) => b[1] - a[1])
+                                .slice(0, 5)
+                                .map(([cat, count]) => `
+                                    <div class="category-item">
+                                        <span class="category-name">${cat}</span>
+                                        <span class="category-count">${count}</span>
+                                    </div>
+                                `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        // Charger au démarrage
+        document.addEventListener('DOMContentLoaded', loadStats);
+    </script>
+</body>
+</html>

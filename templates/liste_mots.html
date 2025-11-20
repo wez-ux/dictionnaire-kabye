@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mots du Dictionnaire Kabyè</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -28,6 +29,7 @@
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            align-items: center;
         }
         .nav a {
             padding: 10px 20px;
@@ -54,43 +56,169 @@
             text-align: center;
             font-size: 18px;
         }
+
+        /* Styles pour la barre de recherche */
+        .search-container {
+            flex: 1;
+            min-width: 300px;
+            margin-left: auto;
+        }
+        .search-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        .search-form {
+            display: flex;
+            gap: 10px;
+        }
+        .search-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .search-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .search-btn:hover {
+            background: #0056b3;
+        }
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        .clear-btn:hover {
+            background: #545b62;
+        }
+
+        /* Alert et résultats */
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .float-end {
+            float: right;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 14px;
+            border-radius: 3px;
+            text-decoration: none;
+        }
+        .btn-outline-info {
+            background: transparent;
+            border: 1px solid #17a2b8;
+            color: #17a2b8;
+        }
+        .btn-outline-info:hover {
+            background: #17a2b8;
+            color: white;
+        }
+
+        /* Style pour la barre de recherche */
+        .search-highlight {
+            background-color: #fff3cd;
+            font-weight: bold;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        /* Animation pour les résultats */
+        .search-results {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        
+        /* Table responsive */
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            min-width: 800px; /* Largeur minimale pour le tableau */
         }
+        
         th, td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
+        
         th {
             background: #2c5530;
             color: white;
             position: sticky;
             top: 0;
+            font-weight: 600;
         }
+        
         tr:hover {
             background: #f8f9fa;
         }
+        
         .api {
             font-family: 'Courier New', monospace;
             background: #f8f9fa;
             padding: 4px 8px;
             border-radius: 4px;
             border: 1px solid #dee2e6;
+            font-size: 0.9em;
         }
+        
         .categorie {
             background: #e7f3ff;
             padding: 4px 8px;
             border-radius: 12px;
             font-size: 12px;
             color: #0066cc;
+            white-space: nowrap;
         }
+        
         .exemple {
             font-style: italic;
             color: #666;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
+        
+        .exemple:hover {
+            white-space: normal;
+            overflow: visible;
+        }
+        
         .export-btn {
             background: #28a745;
             color: white;
@@ -99,9 +227,162 @@
             border-radius: 5px;
             cursor: pointer;
             margin-left: 10px;
+            transition: background 0.3s;
         }
+        
         .export-btn:hover {
             background: #218838;
+        }
+        
+        .mot-principal {
+            font-weight: bold;
+            color: #2c5530;
+        }
+        
+        /* Styles pour mobile */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+            
+            .nav {
+                gap: 8px;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav a {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+                text-align: center;
+            }
+
+            .search-container {
+                min-width: 100%;
+                margin-left: 0;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .stats {
+                font-size: 16px;
+                padding: 12px;
+            }
+            
+            th, td {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+            
+            .table-container {
+                border: 1px solid #ddd;
+            }
+            
+            .export-btn {
+                padding: 8px 12px;
+                font-size: 0.9rem;
+                margin-left: 0;
+                margin-top: 10px;
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .nav a {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+            }
+            
+            th, td {
+                padding: 6px;
+                font-size: 0.8rem;
+            }
+            
+            .api {
+                font-size: 0.8rem;
+                padding: 2px 4px;
+            }
+            
+            .categorie {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+        }
+        
+        /* Indicateur de défilement pour mobile */
+        .scroll-indicator {
+            display: none;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 5px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        @media (max-width: 768px) {
+            .scroll-indicator {
+                display: block;
+            }
+        }
+        
+        /* Modal pour voir les détails complets */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        .detail-section {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #2c5530;
+            margin-bottom: 5px;
         }
     </style>
 </head>
@@ -111,56 +392,157 @@
         
         <div class="nav">
             <a href="/" class="primary">➕ Ajouter un mot</a>
-            <a href="/rechercher">🔍 Rechercher</a>
-            <a href="/statistiques">📊 Statistiques</a>
+            <a href="/">🏠 Accueil</a>
             <button class="export-btn" onclick="exporterJSON()">📥 Exporter JSON</button>
+
+            <!-- Barre de recherche corrigée -->
+            <div class="search-container">
+                <div class="search-card">
+                    <form method="GET" action="/mots" class="search-form">
+                        <input type="text" 
+                            name="q" 
+                            class="search-input" 
+                            placeholder="Rechercher un mot (kabyè, français, variantes, catégorie...)" 
+                            value="{{ terme_recherche or '' }}"
+                            aria-label="Rechercher">
+                        <button class="search-btn" type="submit">
+                            <i class="fas fa-search"></i> Rechercher
+                        </button>
+                        {% if terme_recherche %}
+                        <a href="/mots" class="clear-btn">
+                            <i class="fas fa-times"></i> Effacer
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
         </div>
+
+        <!-- Résultats de recherche -->
+        {% if terme_recherche %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            {% if nombre_resultats > 0 %}
+                {{ nombre_resultats }} résultat(s) trouvé(s) pour "{{ terme_recherche }}"
+            {% else %}
+                Aucun résultat trouvé pour "{{ terme_recherche }}"
+            {% endif %}
+            <a href="/mots" class="float-end btn-sm btn-outline-info">
+                Voir tous les mots
+            </a>
+        </div>
+        {% endif %}
 
         <div class="stats">
             <strong>📚 Total : {{ mots|length }} mots</strong>
         </div>
 
         {% if mots %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Mot Kabyè</th>
-                    <th>Prononciation</th>
-                    <th>Traduction Française</th>
-                    <th>Catégorie</th>
-                    <th>Exemple</th>
-                    <th>Contributeur</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for mot in mots %}
-                <tr>
-                    <td><strong>{{ mot.mot_kabye }}</strong></td>
-                    <td>
-                        {% if mot.api %}
-                        <span class="api">{{ mot.api }}</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ mot.traduction_francaise }}</td>
-                    <td>
-                        {% if mot.categorie_grammaticale %}
-                        <span class="categorie">{{ mot.categorie_grammaticale }}</span>
-                        {% endif %}
-                    </td>
-                    <td class="exemple">{{ mot.exemple_usage or '-' }}</td>
-                    <td>{{ mot.verifie_par }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="scroll-indicator">
+            ↸ Défilez horizontalement pour voir plus de détails
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mot Kabyè</th>
+                        <th>Prononciation</th>
+                        <th>Traduction Française</th>
+                        <th>Catégorie</th>
+                        <th>Exemple</th>
+                        <th>Contributeur</th>
+                        <th>Image</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mot in mots %}
+                    <tr onclick="afficherDetails({{ mot.id }})" style="cursor: pointer;">
+                        <td>
+                            <strong class="mot-principal">{{ mot.mot_kabye }}</strong>
+                            {% if mot.variantes_orthographiques and mot.variantes_orthographiques|length > 0 %}
+                            <br><small style="color: #666;">Variantes: {{ mot.variantes_orthographiques|join(', ') }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if mot.api %}
+                            <span class="api">{{ mot.api }}</span>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ mot.traduction_francaise }}</td>
+                        <td>
+                            {% if mot.categorie_grammaticale %}
+                            <span class="categorie">{{ mot.categorie_grammaticale }}</span>
+                            {% if mot.sous_categorie %}
+                            <br><small style="color: #666;">{{ mot.sous_categorie }}</small>
+                            {% endif %}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td class="exemple" title="{{ mot.exemple_usage }}">
+                            {% if mot.exemple_usage %}
+                            {{ mot.exemple_usage }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ mot.verifie_par }}</td>
+                        <td>
+                            {% if mot.image_url %}
+                            <img src="{{ mot.image_url }}" alt="{{ mot.mot_kabye }}" 
+                                style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;"
+                                onclick="event.stopPropagation(); agrandirImage('{{ mot.image_url }}')">
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                <button onclick="event.stopPropagation(); editerMot({{ mot.id }})" 
+                                        style="background: #17a2b8; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                    ✏️ Éditer
+                                </button>
+                                <button onclick="event.stopPropagation(); supprimerMot({{ mot.id }})" 
+                                        style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;">
+                                    🗑️ Supprimer
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
         {% else %}
         <div style="text-align: center; color: #666; padding: 40px;">
+            {% if terme_recherche %}
+            <p style="font-size: 18px; margin-bottom: 20px;">🔍 Aucun résultat trouvé pour "{{ terme_recherche }}"</p>
+            <a href="/mots" style="background: #6c757d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+                Voir tous les mots
+            </a>
+            {% else %}
             <p style="font-size: 18px; margin-bottom: 20px;">📝 Aucun mot n'a été ajouté yet.</p>
             <a href="/" style="background: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
                 ➕ Soyez le premier à contribuer !
             </a>
+            {% endif %}
         </div>
         {% endif %}
+    </div>
+
+    <!-- Modal pour les détails complets -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fermerModal()">&times;</span>
+            <div id="modalContent">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+        </div>
     </div>
 
     <script>
@@ -178,6 +560,165 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                 });
+        }
+
+        function afficherDetails(motId) {
+            // Charger les données depuis l'API
+            fetch('/api/mots')
+                .then(response => response.json())
+                .then(mots => {
+                    const mot = mots.find(m => m.id === motId);
+                    if (mot) {
+                        afficherModal(mot);
+                    }
+                });
+        }
+
+        function afficherModal(mot) {
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('modalContent');
+            
+            let html = `
+                <h2>${mot.mot_kabye}</h2>
+                ${mot.api ? `<div class="detail-section"><div class="detail-label">Prononciation:</div> <span class="api">${mot.api}</span></div>` : ''}
+                
+                <div class="detail-section">
+                    <div class="detail-label">Traduction française:</div>
+                    ${mot.traduction_francaise}
+                </div>
+                
+                ${mot.variantes_orthographiques && mot.variantes_orthographiques.length > 0 ? `
+                <div class="detail-section">
+                    <div class="detail-label">Variantes orthographiques:</div>
+                    ${mot.variantes_orthographiques.join(', ')}
+                </div>` : ''}
+                
+                ${mot.categorie_grammaticale ? `
+                <div class="detail-section">
+                    <div class="detail-label">Catégorie grammaticale:</div>
+                    ${mot.categorie_grammaticale}
+                    ${mot.sous_categorie ? ` (${mot.sous_categorie})` : ''}
+                </div>` : ''}
+                
+                ${mot.sens_multiple && mot.sens_multiple.length > 0 ? `
+                <div class="detail-section">
+                    <div class="detail-label">Sens multiples:</div>
+                    ${mot.sens_multiple.join('; ')}
+                </div>` : ''}
+                
+                ${mot.synonymes && mot.synonymes.length > 0 ? `
+                <div class="detail-section">
+                    <div class="detail-label">Synonymes:</div>
+                    ${mot.synonymes.join(', ')}
+                </div>` : ''}
+                
+                ${mot.exemple_usage ? `
+                <div class="detail-section">
+                    <div class="detail-label">Exemple d'usage:</div>
+                    "${mot.exemple_usage}"
+                    ${mot.traduction_exemple ? `<br><em>→ ${mot.traduction_exemple}</em>` : ''}
+                </div>` : ''}
+                
+                ${mot.expressions_associees && mot.expressions_associees.length > 0 ? `
+                <div class="detail-section">
+                    <div class="detail-label">Expressions associées:</div>
+                    ${mot.expressions_associees.map(expr => `<div><strong>${expr.expression}</strong>: ${expr.traduction}</div>`).join('')}
+                </div>` : ''}
+                
+                ${mot.origine_mot ? `
+                <div class="detail-section">
+                    <div class="detail-label">Origine du mot:</div>
+                    ${mot.origine_mot}
+                </div>` : ''}
+                
+                ${mot.notes_usage ? `
+                <div class="detail-section">
+                    <div class="detail-label">Notes d'usage:</div>
+                    ${mot.notes_usage}
+                </div>` : ''}
+                
+                <div class="detail-section">
+                    <div class="detail-label">Informations techniques:</div>
+                    Ajouté par <strong>${mot.verifie_par}</strong> le ${mot.date_ajout}
+                    ${mot.date_modification ? `<br>Dernière modification: ${mot.date_modification}` : ''}
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            modal.style.display = 'block';
+        }
+
+        function fermerModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+
+        // Fermer le modal en cliquant en dehors
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailModal');
+            if (event.target === modal) {
+                fermerModal();
+            }
+        }
+
+        // Fermer le modal avec la touche Échap
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                fermerModal();
+            }
+        });
+
+        function agrandirImage(url) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 1000;
+                cursor: pointer;
+            `;
+            
+            modal.innerHTML = `
+                <img src="${url}" style="max-width: 90%; max-height: 90%; object-fit: contain; border-radius: 8px;">
+            `;
+            
+            modal.onclick = function() {
+                document.body.removeChild(modal);
+            };
+            
+            document.body.appendChild(modal);
+        }
+
+        function editerMot(motId) {
+            window.location.href = `/editer/${motId}`;
+        }
+
+        function supprimerMot(motId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce mot ? Cette action est irréversible.')) {
+                fetch(`/supprimer/${motId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(result.message);
+                        window.location.reload();
+                    } else {
+                        alert('Erreur: ' + result.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Erreur de connexion');
+                });
+            }
         }
     </script>
 </body>
