@@ -7,6 +7,8 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 from dotenv import load_dotenv
+from database import get_session, MotKabye
+from sqlalchemy import or_, func
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -22,13 +24,7 @@ cloudinary.config(
 )
 
 # Configuration
-# DATA_DIR = Path('/home/ubuntu/dictionnaire-kabye/data')
-# DATA_FILE = DATA_DIR / 'mots_kabye.json'
-
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
-DATA_FILE = DATA_DIR / "mots_kabye.json"
-
 
 # Taille maximale pour les uploads (5MB)
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
@@ -37,9 +33,9 @@ app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 # Configuration maintenance
-MAINTENANCE_START = datetime(2024, 1, 1, 22, 0, 0)  # À modifier selon vos besoins
+MAINTENANCE_START = datetime(2024, 1, 1, 22, 0, 0)
 MAINTENANCE_DURATION = timedelta(hours=2)
-MAINTENANCE_MODE = False  # Mettre à True pour activer la maintenance manuellement
+MAINTENANCE_MODE = False
 
 def get_maintenance_info():
     """Obtenir les informations de maintenance"""
@@ -52,7 +48,7 @@ def get_maintenance_info():
             'message': '🛠️ Maintenance en cours',
             'time_remaining': 'Maintenance en cours'
         }
-    elif time_until_maintenance.total_seconds() > 0 and time_until_maintenance.total_seconds() <= 7200:  # 2 heures
+    elif time_until_maintenance.total_seconds() > 0 and time_until_maintenance.total_seconds() <= 7200:
         hours = int(time_until_maintenance.total_seconds() // 3600)
         minutes = int((time_until_maintenance.total_seconds() % 3600) // 60)
         seconds = int(time_until_maintenance.total_seconds() % 60)
@@ -76,69 +72,34 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def json_to_list(data):
+    """Convertir les données JSON stockées en liste"""
+    if not data:
+        return []
+    try:
+        return json.loads(data)
+    except:
+        return []
+
+def list_to_json(data_list):
+    """Convertir une liste en JSON pour stockage"""
+    return json.dumps(data_list, ensure_ascii=False) if data_list else None
+
 def initialiser_donnees():
-    """Créer le dossier data et le fichier JSON s'ils n'existent pas"""
-    DATA_DIR.mkdir(exist_ok=True)
-    
-    if not DATA_FILE.exists():
-        donnees_initiales = {
-            "mots": [
-                {
-                    "id": 1,
-                    "mot_kabye": "aalayu",
-                    "variantes_orthographiques": ["aaleyu", "aaleykatay", "akataleyu", "aakaytay"],
-                    "api": "[âlâyú]",
-                    "traduction_francaise": "qui sera le premier",
-                    "sens_multiple": ["qui sera le premier (compétition)"],
-                    "synonymes": ["aaleykatay"],
-                    "categorie_grammaticale": "nom",
-                    "sous_categorie": "nom propre",
-                    "origine_mot": "",
-                    "exemple_usage": "Aalayu tem qui sera le premier à finir",
-                    "traduction_exemple": "Qui sera le premier à finir",
-                    "expressions_associees": [
-                        {
-                            "expression": "aalayu tem",
-                            "traduction": "qui sera le premier à finir"
-                        }
-                    ],
-                    "notes_usage": "Utilisé dans un contexte de compétition",
-                    "image_url": "",
-                    "verifie_par": "Admin",
-                    "date_ajout": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "date_modification": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                }
-            ],
-            "prochain_id": 2
-        }
-        sauvegarder_donnees(donnees_initiales)
-        return donnees_initiales
-    
-    return charger_donnees()
-
-def charger_donnees():
-    """Charger les données depuis le fichier JSON"""
+    """Initialiser la base de données si nécessaire"""
+    session = get_session()
     try:
-        with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        # Vérifier si des données existent
+        count = session.query(MotKabye).count()
+        print(f"Base de données initialisée avec {count} mots.")
     except Exception as e:
-        print(f"Erreur chargement: {e}")
-        return initialiser_donnees()
-
-def sauvegarder_donnees(donnees):
-    """Sauvegarder les données dans le fichier JSON"""
-    try:
-        with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(donnees, f, ensure_ascii=False, indent=2)
-        return True
-    except Exception as e:
-        print(f"Erreur sauvegarde: {e}")
-        return False
+        print(f"Erreur d'initialisation: {e}")
+    finally:
+        session.close()
 
 def upload_image_cloudinary(image_file):
     """Uploader une image sur Cloudinary"""
     try:
-        # Upload sur Cloudinary
         result = cloudinary.uploader.upload(
             image_file,
             folder="dictionnaire-kabye",
@@ -147,7 +108,7 @@ def upload_image_cloudinary(image_file):
             overwrite=False,
             resource_type="image"
         )
-        return result['secure_url']  # Retourne l'URL sécurisée
+        return result['secure_url']
     except Exception as e:
         print(f"Erreur upload Cloudinary: {e}")
         return None
@@ -156,7 +117,6 @@ def supprimer_image_cloudinary(image_url):
     """Supprimer une image de Cloudinary"""
     try:
         if image_url:
-            # Extraire le public_id de l'URL
             public_id = image_url.split('/')[-1].split('.')[0]
             result = cloudinary.uploader.destroy(public_id)
             return result.get('result') == 'ok'
@@ -171,16 +131,41 @@ def accueil():
 @app.route('/editer/<int:mot_id>')
 def editer_mot(mot_id):
     """Page d'édition d'un mot"""
-    donnees = charger_donnees()
-    mot = next((m for m in donnees['mots'] if m['id'] == mot_id), None)
-    
-    if not mot:
-        return "Mot non trouvé", 404
-    
-    return render_template('formulaire.html', mot=mot, edition=True)
+    session = get_session()
+    try:
+        mot = session.query(MotKabye).filter(MotKabye.id == mot_id).first()
+        if not mot:
+            return "Mot non trouvé", 404
+        
+        # Convertir les données JSON en listes pour le template
+        mot_dict = {
+            'id': mot.id,
+            'mot_kabye': mot.mot_kabye,
+            'variantes_orthographiques': ', '.join(json_to_list(mot.variantes_orthographiques)),
+            'api': mot.api,
+            'traduction_francaise': mot.traduction_francaise,
+            'sens_multiple': '; '.join(json_to_list(mot.sens_multiple)),
+            'synonymes': ', '.join(json_to_list(mot.synonymes)),
+            'categorie_grammaticale': mot.categorie_grammaticale,
+            'sous_categorie': mot.sous_categorie,
+            'origine_mot': mot.origine_mot,
+            'exemple_usage': mot.exemple_usage,
+            'traduction_exemple': mot.traduction_exemple,
+            'expressions_associees': '\n'.join([f"{expr['expression']}: {expr['traduction']}" for expr in json_to_list(mot.expressions_associees)]),
+            'notes_usage': mot.notes_usage,
+            'image_url': mot.image_url,
+            'verifie_par': mot.verifie_par,
+            'date_ajout': mot.date_ajout.strftime("%Y-%m-%d %H:%M:%S") if mot.date_ajout else '',
+            'date_modification': mot.date_modification.strftime("%Y-%m-%d %H:%M:%S") if mot.date_modification else ''
+        }
+        
+        return render_template('formulaire.html', mot=mot_dict, edition=True)
+    finally:
+        session.close()
 
 @app.route('/sauvegarder', methods=['POST'])
 def sauvegarder_mot():
+    session = get_session()
     try:
         # Gérer les données form-data (avec fichier)
         if request.content_type.startswith('multipart/form-data'):
@@ -195,29 +180,27 @@ def sauvegarder_mot():
         if not data.get('mot_kabye') or not data.get('traduction_francaise'):
             return jsonify({'success': False, 'error': 'Mot kabyè et traduction française sont obligatoires'})
         
-        # Charger les données existantes
-        donnees = charger_donnees()
-        
         # Vérifier si c'est une édition
         mot_id = data.get('mot_id')
         if mot_id:
             # MODE ÉDITION
             mot_id = int(mot_id)
-            mot_index = next((i for i, m in enumerate(donnees['mots']) if m['id'] == mot_id), None)
+            mot = session.query(MotKabye).filter(MotKabye.id == mot_id).first()
             
-            if mot_index is None:
+            if not mot:
                 return jsonify({'success': False, 'error': 'Mot non trouvé'})
             
             # Vérifier si le nom a changé et s'il existe déjà
-            ancien_mot = donnees['mots'][mot_index]
-            if ancien_mot['mot_kabye'].lower() != data['mot_kabye'].lower():
-                mot_existe = any(mot['mot_kabye'].lower() == data['mot_kabye'].lower() 
-                                for mot in donnees['mots'] if mot['id'] != mot_id)
+            if mot.mot_kabye.lower() != data['mot_kabye'].lower():
+                mot_existe = session.query(MotKabye).filter(
+                    func.lower(MotKabye.mot_kabye) == data['mot_kabye'].lower(),
+                    MotKabye.id != mot_id
+                ).first()
                 if mot_existe:
                     return jsonify({'success': False, 'error': 'Ce mot existe déjà dans le dictionnaire'})
             
             # Gérer l'image
-            image_url = ancien_mot.get('image_url', '')
+            image_url = mot.image_url or ''
             supprimer_ancienne_image = data.get('supprimer_image') == 'true'
             
             if supprimer_ancienne_image and image_url:
@@ -238,8 +221,9 @@ def sauvegarder_mot():
         else:
             # MODE CRÉATION
             # Vérifier si le mot existe déjà
-            mot_existe = any(mot['mot_kabye'].lower() == data['mot_kabye'].lower() 
-                            for mot in donnees['mots'])
+            mot_existe = session.query(MotKabye).filter(
+                func.lower(MotKabye.mot_kabye) == data['mot_kabye'].lower()
+            ).first()
             
             if mot_existe:
                 return jsonify({'success': False, 'error': 'Ce mot existe déjà dans le dictionnaire'})
@@ -253,8 +237,11 @@ def sauvegarder_mot():
                         return jsonify({'success': False, 'error': 'Erreur lors du téléchargement de l\'image'})
                 else:
                     return jsonify({'success': False, 'error': 'Type de fichier non autorisé'})
+            
+            # Créer un nouveau mot
+            mot = MotKabye()
         
-        # Traiter les listes (variantes, sens multiples, synonymes)
+        # Traiter les listes
         variantes = [v.strip() for v in data.get('variantes_orthographiques', '').split(',') if v.strip()]
         sens_multiple = [s.strip() for s in data.get('sens_multiple', '').split(';') if s.strip()]
         synonymes = [s.strip() for s in data.get('synonymes', '').split(',') if s.strip()]
@@ -271,61 +258,207 @@ def sauvegarder_mot():
                         "traduction": expr_parts[1].strip()
                     })
         
-        # Préparer les données du mot
-        mot_data = {
-            "mot_kabye": data['mot_kabye'].strip(),
-            "variantes_orthographiques": variantes,
-            "api": data.get('api', '').strip(),
-            "traduction_francaise": data['traduction_francaise'].strip(),
-            "sens_multiple": sens_multiple,
-            "synonymes": synonymes,
-            "categorie_grammaticale": data.get('categorie_grammaticale', '').strip(),
-            "sous_categorie": data.get('sous_categorie', '').strip(),
-            "origine_mot": data.get('origine_mot', '').strip(),
-            "exemple_usage": data.get('exemple_usage', '').strip(),
-            "traduction_exemple": data.get('traduction_exemple', '').strip(),
-            "expressions_associees": expressions,
-            "notes_usage": data.get('notes_usage', '').strip(),
-            "image_url": image_url,
-            "verifie_par": data.get('verifie_par', 'Anonyme').strip(),
-            "date_modification": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
+        # Mettre à jour les données du mot
+        mot.mot_kabye = data['mot_kabye'].strip()
+        mot.variantes_orthographiques = list_to_json(variantes)
+        mot.api = data.get('api', '').strip()
+        mot.traduction_francaise = data['traduction_francaise'].strip()
+        mot.sens_multiple = list_to_json(sens_multiple)
+        mot.synonymes = list_to_json(synonymes)
+        mot.categorie_grammaticale = data.get('categorie_grammaticale', '').strip()
+        mot.sous_categorie = data.get('sous_categorie', '').strip()
+        mot.origine_mot = data.get('origine_mot', '').strip()
+        mot.exemple_usage = data.get('exemple_usage', '').strip()
+        mot.traduction_exemple = data.get('traduction_exemple', '').strip()
+        mot.expressions_associees = list_to_json(expressions)
+        mot.notes_usage = data.get('notes_usage', '').strip()
+        mot.image_url = image_url
+        mot.verifie_par = data.get('verifie_par', 'Anonyme').strip()
+        mot.date_modification = datetime.now()
         
+        if not mot_id:
+            # Nouveau mot
+            mot.date_ajout = datetime.now()
+            session.add(mot)
+        
+        session.commit()
+        
+        message = f'✅ Mot "{data["mot_kabye"]}" sauvegardé avec succès !'
         if mot_id:
-            # Mettre à jour le mot existant
-            donnees['mots'][mot_index].update(mot_data)
             message = f'✅ Mot "{data["mot_kabye"]}" modifié avec succès !'
-        else:
-            # Créer un nouveau mot
-            nouveau_mot = {
-                "id": donnees['prochain_id'],
-                "date_ajout": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                **mot_data
-            }
-            donnees['mots'].append(nouveau_mot)
-            donnees['prochain_id'] += 1
-            message = f'✅ Mot "{data["mot_kabye"]}" sauvegardé avec succès !'
         
-        # Sauvegarder
-        if sauvegarder_donnees(donnees):
-            return jsonify({
-                'success': True, 
-                'message': message,
-                'image_url': image_url,
-                'mot_id': mot_id if mot_id else donnees['prochain_id'] - 1
-            })
-        else:
-            return jsonify({'success': False, 'error': 'Erreur lors de la sauvegarde'})
+        return jsonify({
+            'success': True, 
+            'message': message,
+            'image_url': image_url,
+            'mot_id': mot.id
+        })
             
     except Exception as e:
+        session.rollback()
         return jsonify({'success': False, 'error': str(e)})
+    finally:
+        session.close()
+
+@app.route('/supprimer/<int:mot_id>', methods=['POST'])
+def supprimer_mot(mot_id):
+    session = get_session()
+    try:
+        mot = session.query(MotKabye).filter(MotKabye.id == mot_id).first()
+        
+        if not mot:
+            return jsonify({'success': False, 'error': 'Mot non trouvé'})
+        
+        nom_mot = mot.mot_kabye
+        
+        # Supprimer l'image associée si elle existe
+        if mot.image_url:
+            supprimer_image_cloudinary(mot.image_url)
+        
+        # Supprimer le mot
+        session.delete(mot)
+        session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'✅ Mot "{nom_mot}" supprimé avec succès !'
+        })
+            
+    except Exception as e:
+        session.rollback()
+        return jsonify({'success': False, 'error': str(e)})
+    finally:
+        session.close()
+
+@app.route('/mots')
+def liste_mots():
+    """Afficher tous les mots avec recherche multi-critères"""
+    session = get_session()
+    try:
+        # Récupérer les paramètres de recherche
+        terme_recherche = request.args.get('q', '').strip().lower()
+        champ_recherche = request.args.get('champ', 'tous')
+        initiale = request.args.get('initiale', '').upper()
+        
+        # Requête de base
+        query = session.query(MotKabye)
+        
+        # Filtrer par initiale si spécifiée
+        if initiale and len(initiale) == 1:
+            query = query.filter(MotKabye.mot_kabye.startswith(initiale))
+        
+        # Filtrer par terme de recherche si spécifié
+        if terme_recherche:
+            if champ_recherche in ['tous', 'kabye']:
+                query = query.filter(
+                    or_(
+                        MotKabye.mot_kabye.ilike(f'%{terme_recherche}%'),
+                        MotKabye.variantes_orthographiques.ilike(f'%{terme_recherche}%')
+                    )
+                )
+            elif champ_recherche in ['tous', 'francais']:
+                query = query.filter(
+                    or_(
+                        MotKabye.traduction_francaise.ilike(f'%{terme_recherche}%'),
+                        MotKabye.sens_multiple.ilike(f'%{terme_recherche}%')
+                    )
+                )
+        
+        # Trier par date de modification
+        mots = query.order_by(MotKabye.date_modification.desc()).all()
+        
+        # Convertir pour l'affichage
+        mots_affichage = []
+        for mot in mots:
+            mots_affichage.append({
+                'id': mot.id,
+                'mot_kabye': mot.mot_kabye,
+                'traduction_francaise': mot.traduction_francaise,
+                'categorie_grammaticale': mot.categorie_grammaticale,
+                'date_modification': mot.date_modification.strftime("%Y-%m-%d %H:%M:%S") if mot.date_modification else '',
+                'image_url': mot.image_url
+            })
+        
+        return render_template('liste_mots.html', 
+                             mots=mots_affichage, 
+                             terme_recherche=terme_recherche,
+                             nombre_resultats=len(mots_affichage),
+                             champ_recherche=champ_recherche,
+                             initiale_recherche=initiale)
+    finally:
+        session.close()
+
+@app.route('/api/mots')
+def api_mots():
+    """API pour récupérer les mots en JSON"""
+    session = get_session()
+    try:
+        mots = session.query(MotKabye).all()
+        result = []
+        for mot in mots:
+            result.append({
+                'id': mot.id,
+                'mot_kabye': mot.mot_kabye,
+                'variantes_orthographiques': json_to_list(mot.variantes_orthographiques),
+                'api': mot.api,
+                'traduction_francaise': mot.traduction_francaise,
+                'sens_multiple': json_to_list(mot.sens_multiple),
+                'synonymes': json_to_list(mot.synonymes),
+                'categorie_grammaticale': mot.categorie_grammaticale,
+                'sous_categorie': mot.sous_categorie,
+                'origine_mot': mot.origine_mot,
+                'exemple_usage': mot.exemple_usage,
+                'traduction_exemple': mot.traduction_exemple,
+                'expressions_associees': json_to_list(mot.expressions_associees),
+                'notes_usage': mot.notes_usage,
+                'image_url': mot.image_url,
+                'verifie_par': mot.verifie_par,
+                'date_ajout': mot.date_ajout.strftime("%Y-%m-%d %H:%M:%S") if mot.date_ajout else '',
+                'date_modification': mot.date_modification.strftime("%Y-%m-%d %H:%M:%S") if mot.date_modification else ''
+            })
+        return jsonify(result)
+    finally:
+        session.close()
+
+@app.route('/api/mot/<int:mot_id>')
+def api_mot_detail(mot_id):
+    """API pour récupérer un mot spécifique en JSON"""
+    session = get_session()
+    try:
+        mot = session.query(MotKabye).filter(MotKabye.id == mot_id).first()
+        if mot:
+            result = {
+                'id': mot.id,
+                'mot_kabye': mot.mot_kabye,
+                'variantes_orthographiques': json_to_list(mot.variantes_orthographiques),
+                'api': mot.api,
+                'traduction_francaise': mot.traduction_francaise,
+                'sens_multiple': json_to_list(mot.sens_multiple),
+                'synonymes': json_to_list(mot.synonymes),
+                'categorie_grammaticale': mot.categorie_grammaticale,
+                'sous_categorie': mot.sous_categorie,
+                'origine_mot': mot.origine_mot,
+                'exemple_usage': mot.exemple_usage,
+                'traduction_exemple': mot.traduction_exemple,
+                'expressions_associees': json_to_list(mot.expressions_associees),
+                'notes_usage': mot.notes_usage,
+                'image_url': mot.image_url,
+                'verifie_par': mot.verifie_par,
+                'date_ajout': mot.date_ajout.strftime("%Y-%m-%d %H:%M:%S") if mot.date_ajout else '',
+                'date_modification': mot.date_modification.strftime("%Y-%m-%d %H:%M:%S") if mot.date_modification else ''
+            }
+            return jsonify(result)
+        else:
+            return jsonify({'error': 'Mot non trouvé'}), 404
+    finally:
+        session.close()
 
 def calculer_statistiques(mots):
     """Calculer les statistiques par personne"""
     stats_par_personne = {}
     
     for mot in mots:
-        verifie_par = mot.get('verifie_par', 'Non spécifié')
+        verifie_par = mot.verifie_par or 'Non spécifié'
         
         if verifie_par not in stats_par_personne:
             stats_par_personne[verifie_par] = {
@@ -340,30 +473,23 @@ def calculer_statistiques(mots):
         stats_par_personne[verifie_par]['total_mots'] += 1
         
         # Compter par catégorie
-        categorie = mot.get('categorie_grammaticale', 'Non spécifiée')
+        categorie = mot.categorie_grammaticale or 'Non spécifiée'
         stats_par_personne[verifie_par]['categories'][categorie] = \
             stats_par_personne[verifie_par]['categories'].get(categorie, 0) + 1
         
         # Traiter les dates
-        date_ajout = mot.get('date_ajout', '')
-        date_modification = mot.get('date_modification', '')
-        
+        date_ajout = mot.date_ajout
         if date_ajout:
-            try:
-                date_obj = datetime.strptime(date_ajout, "%Y-%m-%d %H:%M:%S")
-                mois_annee = date_obj.strftime("%Y-%m")
-                
-                # Statistiques par mois
-                stats_par_personne[verifie_par]['mots_par_mois'][mois_annee] = \
-                    stats_par_personne[verifie_par]['mots_par_mois'].get(mois_annee, 0) + 1
-                
-                # Dernière activité
-                if not stats_par_personne[verifie_par]['derniere_activite'] or \
-                   date_obj > datetime.strptime(stats_par_personne[verifie_par]['derniere_activite'], "%Y-%m-%d %H:%M:%S"):
-                    stats_par_personne[verifie_par]['derniere_activite'] = date_ajout
-                    
-            except ValueError:
-                pass
+            mois_annee = date_ajout.strftime("%Y-%m")
+            
+            # Statistiques par mois
+            stats_par_personne[verifie_par]['mots_par_mois'][mois_annee] = \
+                stats_par_personne[verifie_par]['mots_par_mois'].get(mois_annee, 0) + 1
+            
+            # Dernière activité
+            if not stats_par_personne[verifie_par]['derniere_activite'] or \
+               date_ajout > datetime.strptime(stats_par_personne[verifie_par]['derniere_activite'], "%Y-%m-%d %H:%M:%S"):
+                stats_par_personne[verifie_par]['derniere_activite'] = date_ajout.strftime("%Y-%m-%d %H:%M:%S")
     
     # Calculer l'évolution temporelle pour chaque personne
     for personne, data in stats_par_personne.items():
@@ -395,125 +521,21 @@ def calculer_statistiques(mots):
         'globales': stats_globales
     }
 
-@app.route('/supprimer/<int:mot_id>', methods=['POST'])
-def supprimer_mot(mot_id):
-    try:
-        donnees = charger_donnees()
-        
-        # Trouver le mot à supprimer
-        mot_index = next((i for i, m in enumerate(donnees['mots']) if m['id'] == mot_id), None)
-        
-        if mot_index is None:
-            return jsonify({'success': False, 'error': 'Mot non trouvé'})
-        
-        mot = donnees['mots'][mot_index]
-        
-        # Supprimer l'image associée si elle existe
-        if mot.get('image_url'):
-            supprimer_image_cloudinary(mot['image_url'])
-        
-        # Supprimer le mot
-        donnees['mots'].pop(mot_index)
-        
-        # Sauvegarder
-        if sauvegarder_donnees(donnees):
-            return jsonify({
-                'success': True, 
-                'message': f'✅ Mot "{mot["mot_kabye"]}" supprimé avec succès !'
-            })
-        else:
-            return jsonify({'success': False, 'error': 'Erreur lors de la suppression'})
-            
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
-
-@app.route('/mots')
-def liste_mots():
-    """Afficher tous les mots avec recherche multi-critères"""
-    donnees = charger_donnees()
-    mots = donnees['mots']
-
-    # Récupérer les paramètres de recherche
-    terme_recherche = request.args.get('q', '').strip().lower()
-    champ_recherche = request.args.get('champ', 'tous')
-    initiale = request.args.get('initiale', '').upper()  # Recherche par première lettre
-    
-    # Filtrer par initiale si spécifiée
-    if initiale and len(initiale) == 1:
-        mots = [mot for mot in mots if mot['mot_kabye'].upper().startswith(initiale)]
-    
-    # Filtrer par terme de recherche si spécifié
-    if terme_recherche:
-        mots_filtres = []
-        for mot in mots:
-            correspondance = False
-            
-            if champ_recherche in ['tous', 'kabye']:
-                if (terme_recherche in mot['mot_kabye'].lower() or
-                    any(terme_recherche in variante.lower() for variante in mot.get('variantes_orthographiques', []))):
-                    correspondance = True
-            
-            if not correspondance and champ_recherche in ['tous', 'francais']:
-                if (terme_recherche in mot['traduction_francaise'].lower() or
-                    any(terme_recherche in sens.lower() for sens in mot.get('sens_multiple', []))):
-                    correspondance = True
-            
-            if not correspondance and champ_recherche == 'tous':
-                if (any(terme_recherche in synonyme.lower() for synonyme in mot.get('synonymes', [])) or
-                    terme_recherche in mot.get('categorie_grammaticale', '').lower() or
-                    terme_recherche in mot.get('sous_categorie', '').lower() or
-                    terme_recherche in mot.get('notes_usage', '').lower()):
-                    correspondance = True
-            
-            if correspondance:
-                mots_filtres.append(mot)
-        
-        mots = mots_filtres
-    
-    # Trier les mots
-    mots_tries = sorted(mots, key=lambda x: max(
-        x.get('date_modification', ''),
-        x.get('date_ajout', '')
-    ), reverse=True)
-    
-    return render_template('liste_mots.html', 
-                         mots=mots_tries, 
-                         terme_recherche=terme_recherche,
-                         nombre_resultats=len(mots),
-                         champ_recherche=champ_recherche,
-                         initiale_recherche=initiale)
-
-
-@app.route('/api/mots')
-def api_mots():
-    """API pour récupérer les mots en JSON"""
-    donnees = charger_donnees()
-    return jsonify(donnees['mots'])
-
-@app.route('/api/mot/<int:mot_id>')
-def api_mot_detail(mot_id):
-    """API pour récupérer un mot spécifique en JSON"""
-    donnees = charger_donnees()
-    mot = next((m for m in donnees['mots'] if m['id'] == mot_id), None)
-    
-    if mot:
-        return jsonify(mot)
-    else:
-        return jsonify({'error': 'Mot non trouvé'}), 404
-
-
 @app.route('/statistiques')
 def statistiques():
     """Page de statistiques des contributions"""
-    donnees = charger_donnees()
-    return render_template('statistiques.html', mots=donnees['mots'])
+    return render_template('statistiques.html')
 
 @app.route('/api/statistiques')
 def api_statistiques():
     """API pour récupérer les données statistiques"""
-    donnees = charger_donnees()
-    stats = calculer_statistiques(donnees['mots'])
-    return jsonify(stats)
+    session = get_session()
+    try:
+        mots = session.query(MotKabye).all()
+        stats = calculer_statistiques(mots)
+        return jsonify(stats)
+    finally:
+        session.close()
 
 @app.route('/api/maintenance')
 def api_maintenance():
@@ -523,12 +545,17 @@ def api_maintenance():
 @app.route('/sante')
 def sante():
     """Route de santé"""
-    return jsonify({
-        'status': 'OK',
-        'message': 'Dictionnaire Kabyè en ligne',
-        'timestamp': datetime.now().isoformat(),
-        'total_mots': len(charger_donnees()['mots'])
-    })
+    session = get_session()
+    try:
+        total_mots = session.query(MotKabye).count()
+        return jsonify({
+            'status': 'OK',
+            'message': 'Dictionnaire Kabyè en ligne',
+            'timestamp': datetime.now().isoformat(),
+            'total_mots': total_mots
+        })
+    finally:
+        session.close()
 
 if __name__ == '__main__':
     # Initialisation au premier démarrage
