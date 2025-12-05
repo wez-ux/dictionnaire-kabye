@@ -77,8 +77,19 @@ def json_to_list(data):
     if not data:
         return []
     try:
+        # Si c'est déjà une liste, la retourner
+        if isinstance(data, list):
+            return data
+        # Sinon essayer de parser le JSON
         return json.loads(data)
-    except:
+    except json.JSONDecodeError:
+        # Si le JSON est invalide, essayer de le traiter comme une chaîne simple
+        if isinstance(data, str):
+            # Vérifier si c'est une chaîne avec des points-virgules
+            if ';' in data:
+                return [item.strip() for item in data.split(';') if item.strip()]
+            # Ou si c'est une chaîne simple
+            return [data.strip()] if data.strip() else []
         return []
 
 def list_to_json(data_list):
@@ -137,24 +148,29 @@ def editer_mot(mot_id):
         if not mot:
             return "Mot non trouvé", 404
         
+        # DEBUG: Vérifier ce qui est stocké
+        print(f"DEBUG - sens_multiple raw: {mot.sens_multiple}")
+        print(f"DEBUG - sens_multiple type: {type(mot.sens_multiple)}")
+        print(f"DEBUG - json_to_list result: {json_to_list(mot.sens_multiple)}")
+        
         # Convertir les données JSON en listes pour le template
         mot_dict = {
             'id': mot.id,
             'mot_kabye': mot.mot_kabye,
-            'variantes_orthographiques': ', '.join(json_to_list(mot.variantes_orthographiques)),
-            'api': mot.api,
-            'traduction_francaise': mot.traduction_francaise,
-            'sens_multiple': '; '.join(json_to_list(mot.sens_multiple)),
-            'synonymes': ', '.join(json_to_list(mot.synonymes)),
-            'categorie_grammaticale': mot.categorie_grammaticale,
-            'sous_categorie': mot.sous_categorie,
-            'origine_mot': mot.origine_mot,
-            'exemple_usage': mot.exemple_usage,
-            'traduction_exemple': mot.traduction_exemple,
-            'expressions_associees': '\n'.join([f"{expr['expression']}: {expr['traduction']}" for expr in json_to_list(mot.expressions_associees)]),
-            'notes_usage': mot.notes_usage,
-            'image_url': mot.image_url,
-            'verifie_par': mot.verifie_par,
+            'variantes_orthographiques': ', '.join(json_to_list(mot.variantes_orthographiques)) if mot.variantes_orthographiques else '',
+            'api': mot.api or '',
+            'traduction_francaise': mot.traduction_francaise or '',
+            'sens_multiple': '; '.join(json_to_list(mot.sens_multiple)) if mot.sens_multiple else '',
+            'synonymes': ', '.join(json_to_list(mot.synonymes)) if mot.synonymes else '',
+            'categorie_grammaticale': mot.categorie_grammaticale or '',
+            'sous_categorie': mot.sous_categorie or '',
+            'origine_mot': mot.origine_mot or '',
+            'exemple_usage': mot.exemple_usage or '',
+            'traduction_exemple': mot.traduction_exemple or '',
+            'expressions_associees': json_to_list(mot.expressions_associees),
+            'notes_usage': mot.notes_usage or '',
+            'image_url': mot.image_url or '',
+            'verifie_par': mot.verifie_par or '',
             'date_ajout': mot.date_ajout.strftime("%Y-%m-%d %H:%M:%S") if mot.date_ajout else '',
             'date_modification': mot.date_modification.strftime("%Y-%m-%d %H:%M:%S") if mot.date_modification else ''
         }
@@ -162,6 +178,7 @@ def editer_mot(mot_id):
         return render_template('formulaire.html', mot=mot_dict, edition=True)
     finally:
         session.close()
+
 
 @app.route('/sauvegarder', methods=['POST'])
 def sauvegarder_mot():

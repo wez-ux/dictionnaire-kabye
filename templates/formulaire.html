@@ -297,8 +297,8 @@
             <div class="form-group">
                 <label for="variantes_orthographiques">Variantes orthographiques</label>
                 <input type="text" id="variantes_orthographiques" name="variantes_orthographiques" 
-                       value="{{ mot.variantes_orthographiques|join(', ') if mot and mot.variantes_orthographiques else '' }}"
-                       placeholder="Séparées par des virgules (ex: aaleyu, aaleykatay)">
+                    value="{% if mot and mot.variantes_orthographiques %}{{ mot.variantes_orthographiques }}{% endif %}"
+                    placeholder="Séparées par des virgules (ex: aaleyu, aaleykatay)">
                 <small>Caractères spéciaux :</small>
                 <div class="caracteres-speciaux" data-target="variantes_orthographiques">
                     <button type="button" class="btn-special">ɛ</button>
@@ -323,8 +323,8 @@
             <div class="form-group">
                 <label for="synonymes">Synonymes</label>
                 <input type="text" id="synonymes" name="synonymes" 
-                       value="{{ mot.synonymes|join(', ') if mot and mot.synonymes else '' }}"
-                       placeholder="Séparés par des virgules">
+                    value="{% if mot and mot.synonymes %}{{ mot.synonymes }}{% endif %}"
+                    placeholder="Séparés par des virgules">
                 <small>Caractères spéciaux :</small>
                 <div class="caracteres-speciaux" data-target="synonymes">
                     <button type="button" class="btn-special">ɛ</button>
@@ -375,8 +375,8 @@
 
             <div class="form-group">
                 <label for="sens_multiple">Sens multiples</label>
-                <textarea id="sens_multiple" name="sens_multiple" rows="3" 
-                          placeholder="Différents sens séparés par des points-virgules">{{ mot.sens_multiple|join('; ') if mot and mot.sens_multiple else '' }}</textarea>
+                <textarea id="sens_multiple" name="sens_multiple" rows="3"
+                    placeholder="Différents sens séparés par des points-virgules">{% if mot and mot.sens_multiple %}{{ mot.sens_multiple }}{% endif %}</textarea>
             </div>
             
             <div class="form-group">
@@ -436,7 +436,7 @@
             <div class="form-group">
                 <label for="expressions_associees">Expressions associées</label>
                 <textarea id="expressions_associees" name="expressions_associees" rows="3"
-                    placeholder="Format: expression:traduction (une par ligne)&#10;Ex: abaa lady:manoeuvre (personne)">{% if mot and mot.expressions_associees %}{% for expr in mot.expressions_associees %}{{ expr.expression }}:{{ expr.traduction }}{% if not loop.last %}&#10;{% endif %}{% endfor %}{% endif %}</textarea>
+                    placeholder="Format: expression:traduction (une par ligne)&#10;Ex: abaa ladʋ:manoeuvre (personne)">{% for expr in mot.expressions_associees %}{{ expr.expression }}:{{ expr.traduction }}{% if not loop.last %}&#10;{% endif %}{% endfor %}</textarea>
                 <div class="caracteres-speciaux" data-target="expressions_associees">
                     <button type="button" class="btn-special">ɛ</button>
                     <button type="button" class="btn-special">ɩ</button>
