@@ -384,6 +384,64 @@
             color: #2c5530;
             margin-bottom: 5px;
         }
+        /* Styles pour les boutons de caractères spéciaux dans la recherche */
+        .caracteres-speciaux-search {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+            margin-top: 10px;
+        }
+
+        .btn-special-search {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            height: 32px;
+            width: 32px;
+            min-width: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .btn-special-search:hover {
+            background: #138496;
+            transform: scale(1.1);
+        }
+
+        .btn-special-search:active {
+            transform: scale(0.95);
+        }
+
+        /* Responsive pour les boutons de recherche */
+        @media (max-width: 768px) {
+            .caracteres-speciaux-search {
+                padding: 8px;
+            }
+            
+            .btn-special-search {
+                height: 28px;
+                width: 28px;
+                min-width: 28px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .btn-special-search {
+                height: 24px;
+                width: 24px;
+                min-width: 24px;
+                font-size: 12px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -396,11 +454,13 @@
             <button class="export-btn" onclick="exporterJSON()">📥 Exporter JSON</button>
 
             <!-- Barre de recherche corrigée -->
+            <!-- Barre de recherche avec caractères spéciaux -->
             <div class="search-container">
                 <div class="search-card">
-                    <form method="GET" action="/mots" class="search-form">
+                    <form method="GET" action="/mots" class="search-form" id="searchForm">
                         <input type="text" 
                             name="q" 
+                            id="searchInput"
                             class="search-input" 
                             placeholder="Rechercher un mot (kabyè, français, variantes, catégorie...)" 
                             value="{{ terme_recherche or '' }}"
@@ -414,6 +474,29 @@
                         </a>
                         {% endif %}
                     </form>
+                    
+                    <!-- Boutons des caractères spéciaux -->
+                    <div class="caracteres-speciaux-search" style="margin-top: 10px;">
+                        <small style="display: block; margin-bottom: 5px; color: #666;">Caractères spéciaux pour la recherche :</small>
+                        <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                            <button type="button" class="btn-special-search" data-char="ɛ">ɛ</button>
+                            <button type="button" class="btn-special-search" data-char="ɩ">ɩ</button>
+                            <button type="button" class="btn-special-search" data-char="ɔ">ɔ</button>
+                            <button type="button" class="btn-special-search" data-char="ŋ">ŋ</button>
+                            <button type="button" class="btn-special-search" data-char="ʋ">ʋ</button>
+                            <button type="button" class="btn-special-search" data-char="ɣ">ɣ</button>
+                            <button type="button" class="btn-special-search" data-char="ɖ">ɖ</button>
+                            <button type="button" class="btn-special-search" data-char="ñ">ñ</button>
+                            <button type="button" class="btn-special-search" data-char="Ɛ">Ɛ</button>
+                            <button type="button" class="btn-special-search" data-char="Ɩ">Ɩ</button>
+                            <button type="button" class="btn-special-search" data-char="Ɔ">Ɔ</button>
+                            <button type="button" class="btn-special-search" data-char="Ŋ">Ŋ</button>
+                            <button type="button" class="btn-special-search" data-char="Ʋ">Ʋ</button>
+                            <button type="button" class="btn-special-search" data-char="Ɣ">Ɣ</button>
+                            <button type="button" class="btn-special-search" data-char="Ɖ">Ɖ</button>
+                            <button type="button" class="btn-special-search" data-char="Ñ">Ñ</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -720,6 +803,58 @@
                 });
             }
         }
+
+        // Fonction pour insérer un caractère dans le champ de recherche
+        function insererCaractereRecherche(caractere) {
+            const input = document.getElementById('searchInput');
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            
+            // Insérer le caractère à la position du curseur
+            input.value = input.value.substring(0, start) + caractere + input.value.substring(end);
+            
+            // Remettre le focus et positionner le curseur après le caractère inséré
+            input.focus();
+            input.setSelectionRange(start + caractere.length, start + caractere.length);
+            
+            // Optionnel : Soumettre automatiquement le formulaire après insertion
+            // document.getElementById('searchForm').submit();
+        }
+
+        // Initialiser les boutons de caractères spéciaux pour la recherche
+        document.addEventListener('DOMContentLoaded', function() {
+            const boutonsSpeciaux = document.querySelectorAll('.btn-special-search');
+            
+            boutonsSpeciaux.forEach(bouton => {
+                bouton.addEventListener('click', function() {
+                    const caractere = this.getAttribute('data-char');
+                    insererCaractereRecherche(caractere);
+                });
+            });
+            
+            // Ajouter un raccourci clavier pour insérer des caractères spéciaux
+            document.addEventListener('keydown', function(e) {
+                // Exemple: Ctrl+Alt+E pour insérer ɛ
+                if (e.ctrlKey && e.altKey) {
+                    switch(e.key.toLowerCase()) {
+                        case 'e':
+                            e.preventDefault();
+                            insererCaractereRecherche('ɛ');
+                            break;
+                        case 'i':
+                            e.preventDefault();
+                            insererCaractereRecherche('ɩ');
+                            break;
+                        case 'o':
+                            e.preventDefault();
+                            insererCaractereRecherche('ɔ');
+                            break;
+                        // Ajouter d'autres raccourcis au besoin
+                    }
+                }
+            });
+        });
+
     </script>
 </body>
 </html>

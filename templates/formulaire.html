@@ -436,7 +436,7 @@
             <div class="form-group">
                 <label for="expressions_associees">Expressions associées</label>
                 <textarea id="expressions_associees" name="expressions_associees" rows="3"
-                    placeholder="Format: expression:traduction (une par ligne)&#10;Ex: abaa ladʋ:manoeuvre (personne)">{% for expr in mot.expressions_associees %}{{ expr.expression }}:{{ expr.traduction }}{% if not loop.last %}&#10;{% endif %}{% endfor %}</textarea>
+                    placeholder="Format: expression:traduction (une par ligne)&#10;Ex: abaa ladʋ:manoeuvre (personne)">{% if mot and mot.expressions_associees %}{% for expr in mot.expressions_associees %}{{ expr.expression }}:{{ expr.traduction }}{% if not loop.last %}&#10;{% endif %}{% endfor %}{% endif %}</textarea>
                 <div class="caracteres-speciaux" data-target="expressions_associees">
                     <button type="button" class="btn-special">ɛ</button>
                     <button type="button" class="btn-special">ɩ</button>
