@@ -390,7 +390,10 @@ def liste_mots():
             mots_affichage.append({
                 'id': mot.id,
                 'mot_kabye': mot.mot_kabye,
+                'api': mot.api,
                 'traduction_francaise': mot.traduction_francaise,
+                'exemple_usage': mot.exemple_usage,
+                'verifie_par': mot.verifie_par,
                 'categorie_grammaticale': mot.categorie_grammaticale,
                 'date_modification': mot.date_modification.strftime("%Y-%m-%d %H:%M:%S") if mot.date_modification else '',
                 'image_url': mot.image_url
