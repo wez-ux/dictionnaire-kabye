@@ -16,15 +16,20 @@ def migrer_json_vers_db():
     DATA_FILE = BASE_DIR / "data" / "mots_kabye.json"
 
     with open(DATA_FILE, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        data = json.load(f)  # ← data est UNE LISTE
 
     session = get_session()
     ajoutés = 0
     ignorés = 0
 
     try:
-        for mot in data["mots"]:
-            # Vérification d'existence
+        for mot in data:  # ✅ CORRECTION ICI
+
+            # Sécurité minimale
+            if "mot_kabye" not in mot or "traduction_francaise" not in mot:
+                continue
+
+            # Vérifier si le mot existe déjà
             existe = session.query(MotKabye).filter_by(
                 mot_kabye=mot["mot_kabye"],
                 traduction_francaise=mot["traduction_francaise"]
@@ -65,7 +70,7 @@ def migrer_json_vers_db():
                 date_ajout=parse_date(mot.get("date_ajout")) or datetime.now(),
                 date_modification=parse_date(mot.get("date_modification")) or datetime.now(),
 
-                # Nouveaux champs
+                # Champs de validation (nouveau schéma)
                 statut_validation="en_attente",
                 notes_validation=None,
                 date_validation=None
@@ -75,7 +80,7 @@ def migrer_json_vers_db():
             ajoutés += 1
 
         session.commit()
-        print(f"✅ Migration terminée")
+        print("✅ Migration terminée avec succès")
         print(f"➕ Ajoutés : {ajoutés}")
         print(f"⏭️ Ignorés (déjà existants) : {ignorés}")
 
