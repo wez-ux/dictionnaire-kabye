@@ -1,3 +1,4 @@
+import secrets
 from flask import Flask, render_template, request, jsonify
 import json
 import os
@@ -10,10 +11,15 @@ from dotenv import load_dotenv
 from database import get_session, MotKabye
 from sqlalchemy import or_, func
 
+from validation import validation_bp
+
 # Charger les variables d'environnement
 load_dotenv()
 
 app = Flask(__name__)
+
+# CONFIGURER LA CLÉ SECRÈTE POUR LES SESSIONS
+app.secret_key = secrets.token_hex(32)  # 32 octets = 64 caractères hexadécimaux
 
 # Configuration Cloudinary
 cloudinary.config(
@@ -134,6 +140,10 @@ def supprimer_image_cloudinary(image_url):
     except Exception as e:
         print(f"Erreur suppression Cloudinary: {e}")
     return False
+
+
+# Enregistrer le blueprint (ajoutez cette ligne avant les routes)
+app.register_blueprint(validation_bp, url_prefix='/validation')
 
 @app.route('/')
 def accueil():
@@ -556,6 +566,10 @@ def api_statistiques():
         return jsonify(stats)
     finally:
         session.close()
+
+
+
+
 
 @app.route('/api/maintenance')
 def api_maintenance():

@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validation - Dictionnaire Kabyè</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --couleur-valide: #28a745;
+            --couleur-attente: #ffc107;
+            --couleur-revision: #fd7e14;
+            --couleur-rejete: #dc3545;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .statut-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .statut-valide {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--couleur-valide);
+            border: 1px solid var(--couleur-valide);
+        }
+        
+        .statut-attente {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: var(--couleur-attente);
+            border: 1px solid var(--couleur-attente);
+        }
+        
+        .statut-revision {
+            background-color: rgba(253, 126, 20, 0.1);
+            color: var(--couleur-revision);
+            border: 1px solid var(--couleur-revision);
+        }
+        
+        .statut-rejete {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--couleur-rejete);
+            border: 1px solid var(--couleur-rejete);
+        }
+        
+        .mot-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #dee2e6;
+        }
+        
+        .mot-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .mot-card.valide {
+            border-left-color: var(--couleur-valide);
+        }
+        
+        .mot-card.attente {
+            border-left-color: var(--couleur-attente);
+        }
+        
+        .mot-card.revision {
+            border-left-color: var(--couleur-revision);
+        }
+        
+        .mot-card.rejete {
+            border-left-color: var(--couleur-rejete);
+        }
+        
+        .validation-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .progress {
+            height: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .btn-action {
+            min-width: 100px;
+            margin: 5px;
+        }
+        
+        .mot-details {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .detail-value {
+            color: #212529;
+            margin-bottom: 15px;
+        }
+        
+        .filters {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        #validationModal .modal-dialog {
+            max-width: 700px;
+        }
+        
+        .notes-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .modification-input {
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .modification-input:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/validation">
+                <i class="fas fa-book me-2"></i>Validation Kabyè
+            </a>
+            <div class="d-flex align-items-center">
+                <!-- Afficher le nom du validateur -->
+                <div class="validateur-info me-3">
+                    <span class="badge bg-primary me-2">
+                        <i class="fas fa-user me-1"></i>
+                        <span id="validateurNom">{{ validateur_nom }}</span>
+                    </span>
+                    <small class="text-muted" id="validateurRole">
+                        {% if validateur_role == 'expert' %}
+                            Expert linguistique
+                        {% else %}
+                            Validateur
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="exportBtn">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="statsBtn">
+                        <i class="fas fa-chart-bar me-1"></i>Stats
+                    </button>
+                    <a href="/validation/logout" class="btn btn-outline-danger btn-sm">
+                        <i class="fas fa-sign-out-alt me-1"></i>Déconnexion
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Statistiques en haut -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="validation-panel">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+                                    <h5 id="totalMots" class="card-title">0</h5>
+                                    <p class="card-text text-muted">Mots total</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-0" style="background-color: rgba(40, 167, 69, 0.1);">
+                                <div class="card-body">
+                                    <h5 id="motsValides" class="card-title text-success">0</h5>
+                                    <p class="card-text text-success">Validés</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-0" style="background-color: rgba(255, 193, 7, 0.1);">
+                                <div class="card-body">
+                                    <h5 id="motsAttente" class="card-title text-warning">0</h5>
+                                    <p class="card-text text-warning">En attente</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card border-0" style="background-color: rgba(253, 126, 20, 0.1);">
+                                <div class="card-body">
+                                    <h5 id="motsRevision" class="card-title" style="color: #fd7e14;">0</h5>
+                                    <p class="card-text" style="color: #fd7e14;">À réviser</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mt-3">
+                        <div id="progressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <small class="text-muted" id="progressText">Progression : 0%</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtres -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="filters">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="filtreStatut" class="form-label">Statut</label>
+                            <select id="filtreStatut" class="form-select">
+                                <option value="tous">Tous les statuts</option>
+                                <option value="en_attente">En attente</option>
+                                <option value="valide">Validés</option>
+                                <option value="a_reviser">À réviser</option>
+                                <option value="rejete">Rejetés</option>
+                            </select>
+                        </div>
+                        <!-- Dans la section des filtres, ajoutez ce bloc -->
+                        <div class="col-md-4">
+                            <label for="filtreLettre" class="form-label">Lettre initiale</label>
+                            <select id="filtreLettre" class="form-select">
+                                <option value="">Toutes les lettres</option>
+                                <option value="a">a</option>
+                                <option value="b">b</option>
+                                <option value="c">c</option>
+                                <option value="d">d</option>
+                                <option value="ɖ">ɖ</option>
+                                <option value="e">e</option>
+                                <option value="ɛ">ɛ</option>
+                                <option value="f">f</option>
+                                <option value="g">g</option>
+                                <option value="h">h</option>
+                                <option value="i">i</option>
+                                <option value="ɩ">ɩ</option>
+                                <option value="j">j</option>
+                                <option value="k">k</option>
+                                <option value="kp">kp</option>
+                                <option value="l">l</option>
+                                <option value="m">m</option>
+                                <option value="n">n</option>
+                                <option value="ñ">ñ</option>
+                                <option value="ŋ">ŋ</option>
+                                <option value="o">o</option>
+                                <option value="ɔ">ɔ</option>
+                                <option value="p">p</option>
+                                <option value="s">s</option>
+                                <option value="t">t</option>
+                                <option value="u">u</option>
+                                <option value="w">w</option>
+                                <option value="y">y</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="filtreContributeur" class="form-label">Contributeur</label>
+                            <select id="filtreContributeur" class="form-select">
+                                <option value="tous">Tous les contributeurs</option>
+                            </select>
+                        </div>
+                        <!-- <div class="col-md-4">
+                            <label for="filtreDate" class="form-label">Date d'ajout</label>
+                            <select id="filtreDate" class="form-select">
+                                <option value="tous">Toutes les dates</option>
+                                <option value="today">Aujourd'hui</option>
+                                <option value="week">Cette semaine</option>
+                                <option value="month">Ce mois</option>
+                            </select>
+                        </div> -->
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Rechercher un mot...">
+                                <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des mots -->
+        <div class="row">
+            <div class="col-md-5">
+                <div class="validation-panel">
+                    <h5 class="mb-3">
+                        <i class="fas fa-list me-2"></i>Mots à valider
+                        <span id="countBadge" class="badge bg-primary ms-2">0</span>
+                    </h5>
+                    <div id="motsList" class="list-group" style="max-height: 600px; overflow-y: auto;">
+                        <!-- Les mots seront chargés ici -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-7">
+                <div class="validation-panel">
+                    <h5 class="mb-3">
+                        <i class="fas fa-edit me-2"></i>Détails du mot
+                        <span id="currentStatut" class="badge ms-2">...</span>
+                    </h5>
+                    <div id="motDetails">
+                        <div class="text-center py-5">
+                            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Sélectionnez un mot pour commencer la validation</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de validation -->
+    <div class="modal fade" id="validationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Validation du mot : <span id="modalMotTitre"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                    <div class="mb-3">
+                        <label class="form-label">Statut de validation</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="statutRadio" id="statutValide" value="valide">
+                            <label class="btn btn-outline-success" for="statutValide">
+                                <i class="fas fa-check me-1"></i>Valider
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="statutRadio" id="statutRevision" value="a_reviser">
+                            <label class="btn btn-outline-warning" for="statutRevision">
+                                <i class="fas fa-edit me-1"></i>À réviser
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="statutRadio" id="statutRejete" value="rejete">
+                            <label class="btn btn-outline-danger" for="statutRejete">
+                                <i class="fas fa-times me-1"></i>Rejeter
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6 class="border-bottom pb-2">Modifications suggérées</h6>
+                        
+                        <div class="row">
+                            <!-- Colonne de gauche -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="modifMot" class="form-label">Mot kabyè *</label>
+                                    <input type="text" class="form-control modification-input" 
+                                        id="modifMot" placeholder="Mot kabyè">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifVariantes" class="form-label">Variantes orthographiques</label>
+                                    <textarea class="form-control modification-input" 
+                                            id="modifVariantes" rows="2" 
+                                            placeholder="Séparées par des points-virgules"></textarea>
+                                    <small class="text-muted">Ex: variante1; variante2; variante3</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifAPI" class="form-label">API (phonétique)</label>
+                                    <input type="text" class="form-control modification-input" 
+                                        id="modifAPI" placeholder="Transcription API">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifTraduction" class="form-label">Traduction française *</label>
+                                    <input type="text" class="form-control modification-input" 
+                                        id="modifTraduction" placeholder="Traduction">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifSensMultiple" class="form-label">Sens multiple</label>
+                                    <textarea class="form-control modification-input" 
+                                            id="modifSensMultiple" rows="3" 
+                                            placeholder="Différents sens du mot"></textarea>
+                                    <small class="text-muted">Un sens par ligne</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifSynonymes" class="form-label">Synonymes</label>
+                                    <textarea class="form-control modification-input" 
+                                            id="modifSynonymes" rows="2" 
+                                            placeholder="Synonymes en kabyè"></textarea>
+                                    <small class="text-muted">Séparés par des points-virgules</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Colonne de droite -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="modifCategorie" class="form-label">Catégorie grammaticale</label>
+                                    <input type="text" class="form-control modification-input" 
+                                        id="modifCategorie" placeholder="Ex: nom, verbe, adjectif">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifSousCategorie" class="form-label">Sous-catégorie</label>
+                                    <input type="text" class="form-control modification-input" 
+                                        id="modifSousCategorie" placeholder="Ex: nom propre, verbe transitif">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifOrigine" class="form-label">Origine du mot</label>
+                                    <input type="text" class="form-control modification-input" 
+                                        id="modifOrigine" placeholder="Origine ou étymologie">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifExemple" class="form-label">Exemple d'usage</label>
+                                    <textarea class="form-control modification-input" 
+                                            id="modifExemple" rows="2" 
+                                            placeholder="Exemple en kabyè"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifTraductionExemple" class="form-label">Traduction de l'exemple</label>
+                                    <textarea class="form-control modification-input" 
+                                            id="modifTraductionExemple" rows="2" 
+                                            placeholder="Traduction française de l'exemple"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifExpressions" class="form-label">Expressions associées</label>
+                                    <textarea class="form-control modification-input" 
+                                            id="modifExpressions" rows="3" 
+                                            placeholder="Expression: Traduction"></textarea>
+                                    <small class="text-muted">Une expression par ligne au format "expression: traduction"</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifNotesUsage" class="form-label">Notes d'usage</label>
+                                    <textarea class="form-control modification-input" 
+                                            id="modifNotesUsage" rows="2" 
+                                            placeholder="Informations complémentaires"></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="modifImageUrl" class="form-label">URL de l'image</label>
+                                    <input type="text" class="form-control modification-input" 
+                                        id="modifImageUrl" placeholder="https://example.com/image.jpg">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="validationNotes" class="form-label">Notes de validation</label>
+                        <textarea id="validationNotes" class="form-control notes-textarea" 
+                                placeholder="Commentaires sur la validation, explications des modifications..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="validateurName" class="form-label">Validateur</label>
+                        <input type="text" id="validateurName" class="form-control" readonly>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-primary" id="saveValidation">
+                        <i class="fas fa-save me-1"></i>Enregistrer la validation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Variables globales
+        let currentMotId = null;
+        let motsData = [];
+        let currentValidateur = "Expert Kabyè";
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadMots();
+            setupEventListeners();
+            
+            // Définir le nom du validateur
+            const urlParams = new URLSearchParams(window.location.search);
+            const validateur = urlParams.get('validateur');
+            if (validateur) {
+                currentValidateur = decodeURIComponent(validateur);
+                document.getElementById('validateurName').value = currentValidateur;
+                document.getElementById('userInfo').textContent = `Validateur : ${currentValidateur}`;
+            }
+        });
+
+        function setupEventListeners() {
+            // Filtres
+            document.getElementById('filtreStatut').addEventListener('change', loadMots);
+            document.getElementById('filtreLettre').addEventListener('change', loadMots);
+            document.getElementById('searchBtn').addEventListener('click', loadMots);
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') loadMots();
+            });
+
+            // Boutons d'action
+            document.getElementById('saveValidation').addEventListener('click', saveValidation);
+            document.getElementById('statsBtn').addEventListener('click', showStatsModal);
+            document.getElementById('exportBtn').addEventListener('click', exportData);
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/validation/api/statistiques-validation');
+                const stats = await response.json();
+                
+                document.getElementById('totalMots').textContent = stats.total;
+                document.getElementById('motsValides').textContent = stats.valides;
+                document.getElementById('motsAttente').textContent = stats.en_attente;
+                document.getElementById('motsRevision').textContent = stats.a_reviser;
+                
+                const progress = stats.pourcentage_valide.toFixed(1);
+                document.getElementById('progressBar').style.width = `${progress}%`;
+                document.getElementById('progressText').textContent = `Progression : ${progress}%`;
+                
+            } catch (error) {
+                console.error('Erreur lors du chargement des stats:', error);
+            }
+        }
+
+        async function loadMots() {
+            try {
+                const statut = document.getElementById('filtreStatut').value;
+                const search = document.getElementById('searchInput').value;
+                const lettre = document.getElementById('filtreLettre').value;
+                
+                // Récupérer le validateur depuis l'URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const validateur = urlParams.get('validateur');
+                
+                // Construire l'URL avec TOUS les paramètres nécessaires
+                let url = `/validation/api/mots-a-valider?validateur=${encodeURIComponent(validateur)}`;
+                
+                if (statut !== 'tous') {
+                    url += `&statut=${encodeURIComponent(statut)}`;
+                }
+                
+                if (search) {
+                    url += `&search=${encodeURIComponent(search)}`;
+                }
+                
+                if (lettre) {
+                    url += `&lettre=${encodeURIComponent(lettre)}`;
+                }
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+                
+                motsData = await response.json();
+                displayMotsList();
+                updateCount();
+                
+            } catch (error) {
+                console.error('Erreur lors du chargement des mots:', error);
+                alert('Erreur lors du chargement des mots');
+            }
+        }
+
+        function displayMotsList() {
+            const container = document.getElementById('motsList');
+            container.innerHTML = '';
+            
+            if (motsData.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-2x text-success mb-3"></i>
+                        <p class="text-muted">Tous les mots sont validés !</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            motsData.forEach(mot => {
+                const statutClass = getStatutClass(mot.statut_validation);
+                const statutText = getStatutText(mot.statut_validation);
+                
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = `list-group-item list-group-item-action mot-card ${statutClass}`;
+                item.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${mot.mot_kabye}</h6>
+                            <small class="text-muted">${mot.traduction_francaise}</small>
+                        </div>
+                        <span class="statut-badge ${statutClass}">${statutText}</span>
+                    </div>
+                    ${mot.exemple_usage ? `<small><i>"${mot.exemple_usage}"</i></small>` : ''}
+                `;
+                
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectMot(mot.id);
+                });
+                
+                container.appendChild(item);
+            });
+        }
+
+        function selectMot(motId) {
+            currentMotId = motId;
+            const mot = motsData.find(m => m.id === motId);
+            
+            if (mot) {
+                displayMotDetails(mot);
+                // Charger les détails complets via API
+                loadMotDetails(motId);
+            }
+        }
+
+        async function loadMotDetails(motId) {
+            try {
+                const response = await fetch(`/validation/api/mot/${motId}`);
+                const mot = await response.json();
+                displayFullMotDetails(mot);
+                return mot;
+            } catch (error) {
+                console.error('Erreur lors du chargement des détails:', error);
+                return null;
+            }
+        }
+
+        function displayMotDetails(mot) {
+            const statutClass = getStatutClass(mot.statut_validation);
+            const statutText = getStatutText(mot.statut_validation);
+            
+            document.getElementById('currentStatut').className = `badge ${statutClass}`;
+            document.getElementById('currentStatut').textContent = statutText;
+        }
+
+        function displayFullMotDetails(mot) {
+            const container = document.getElementById('motDetails');
+            
+            const sensMultiple = mot.sens_multiple && mot.sens_multiple.length > 0 
+                ? mot.sens_multiple.join('<br>') 
+                : 'Aucun';
+            
+            const expressions = mot.expressions_associees 
+                ? mot.expressions_associees.map(e => 
+                    `<strong>${e.expression || e}</strong>: ${e.traduction || ''}`
+                  ).join('<br>') 
+                : 'Aucune';
+            
+            container.innerHTML = `
+                <div class="mot-details">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-label">Mot kabyè</div>
+                            <div class="detail-value h5">${mot.mot_kabye}</div>
+                            
+                            <div class="detail-label">API</div>
+                            <div class="detail-value">${mot.api || 'Non spécifié'}</div>
+                            
+                            <div class="detail-label">Traduction française</div>
+                            <div class="detail-value">${mot.traduction_francaise}</div>
+                            
+                            <div class="detail-label">Sens multiple</div>
+                            <div class="detail-value">${sensMultiple}</div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="detail-label">Catégorie grammaticale</div>
+                            <div class="detail-value">${mot.categorie_grammaticale || 'Non spécifiée'}</div>
+                            
+                            <div class="detail-label">Exemple d'usage</div>
+                            <div class="detail-value">${mot.exemple_usage || 'Aucun exemple'}</div>
+                            
+                            <div class="detail-label">Traduction de l'exemple</div>
+                            <div class="detail-value">${mot.traduction_exemple || 'Non traduit'}</div>
+                            
+                            <div class="detail-label">Expressions associées</div>
+                            <div class="detail-value">${expressions}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="detail-label">Notes d'usage</div>
+                            <div class="detail-value">${mot.notes_usage || 'Aucune note'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="detail-label">Informations de validation</div>
+                            <div class="detail-value">
+                                ${mot.verifie_par ? `Validé par : ${mot.verifie_par}<br>` : ''}
+                                ${mot.date_validation ? `Date : ${mot.date_validation}<br>` : ''}
+                                ${mot.notes_validation ? `Notes : ${mot.notes_validation}` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <button class="btn btn-primary btn-lg" onclick="openValidationModal(${mot.id})">
+                            <i class="fas fa-check-circle me-2"></i>Valider ce mot
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function openValidationModal(motId) {
+            const mot = motsData.find(m => m.id === motId);
+            if (!mot) return;
+            
+            // Charger les détails complets
+            loadMotDetails(motId).then(fullMot => {
+                if (!fullMot) return;
+                
+                document.getElementById('modalMotTitre').textContent = fullMot.mot_kabye;
+                document.getElementById('validateurName').value = currentValidateur;
+                
+                // Pré-remplir tous les champs avec les valeurs actuelles
+                document.getElementById('modifMot').value = fullMot.mot_kabye || '';
+                document.getElementById('modifAPI').value = fullMot.api || '';
+                document.getElementById('modifTraduction').value = fullMot.traduction_francaise || '';
+                document.getElementById('modifCategorie').value = fullMot.categorie_grammaticale || '';
+                document.getElementById('modifSousCategorie').value = fullMot.sous_categorie || '';
+                document.getElementById('modifOrigine').value = fullMot.origine_mot || '';
+                document.getElementById('modifExemple').value = fullMot.exemple_usage || '';
+                document.getElementById('modifTraductionExemple').value = fullMot.traduction_exemple || '';
+                document.getElementById('modifNotesUsage').value = fullMot.notes_usage || '';
+                document.getElementById('modifImageUrl').value = fullMot.image_url || '';
+                
+                // Champs avec listes
+                document.getElementById('modifVariantes').value = Array.isArray(fullMot.variantes_orthographiques) 
+                    ? fullMot.variantes_orthographiques.join('; ') 
+                    : (fullMot.variantes_orthographiques || '');
+                
+                document.getElementById('modifSensMultiple').value = Array.isArray(fullMot.sens_multiple)
+                    ? fullMot.sens_multiple.join('\n')
+                    : (fullMot.sens_multiple || '');
+                
+                document.getElementById('modifSynonymes').value = Array.isArray(fullMot.synonymes)
+                    ? fullMot.synonymes.join('; ')
+                    : (fullMot.synonymes || '');
+                
+                // Expressions associées (format spécial)
+                let expressionsText = '';
+                if (Array.isArray(fullMot.expressions_associees)) {
+                    expressionsText = fullMot.expressions_associees.map(expr => {
+                        if (typeof expr === 'string') return expr;
+                        if (expr.expression && expr.traduction) {
+                            return `${expr.expression}: ${expr.traduction}`;
+                        }
+                        return expr.expression || '';
+                    }).filter(e => e).join('\n');
+                }
+                document.getElementById('modifExpressions').value = expressionsText;
+                
+                // Définir le statut actuel
+                const statutRadio = document.querySelector(`input[name="statutRadio"][value="${fullMot.statut_validation || 'en_attente'}"]`);
+                if (statutRadio) statutRadio.checked = true;
+                
+                // Pré-remplir les notes de validation
+                document.getElementById('validationNotes').value = fullMot.notes_validation || '';
+                
+                // Afficher le modal
+                const modal = new bootstrap.Modal(document.getElementById('validationModal'));
+                modal.show();
+            });
+        }
+
+        async function saveValidation() {
+            if (!currentMotId) return;
+            
+            const statut = document.querySelector('input[name="statutRadio"]:checked').value;
+            const notes = document.getElementById('validationNotes').value;
+            const validateur = document.getElementById('validateurName').value;
+            
+            // Récupérer toutes les modifications
+            const modifications = {};
+            
+            // Champs obligatoires
+            const motKabye = document.getElementById('modifMot').value.trim();
+            const traduction = document.getElementById('modifTraduction').value.trim();
+            
+            if (!motKabye || !traduction) {
+                alert('Le mot kabyè et la traduction française sont obligatoires');
+                return;
+            }
+            
+            modifications.mot_kabye = motKabye;
+            modifications.traduction_francaise = traduction;
+            
+            // Champs optionnels simples
+            const champsSimples = {
+                'modifAPI': 'api',
+                'modifCategorie': 'categorie_grammaticale',
+                'modifSousCategorie': 'sous_categorie',
+                'modifOrigine': 'origine_mot',
+                'modifExemple': 'exemple_usage',
+                'modifTraductionExemple': 'traduction_exemple',
+                'modifNotesUsage': 'notes_usage',
+                'modifImageUrl': 'image_url'
+            };
+            
+            for (const [idChamp, nomChamp] of Object.entries(champsSimples)) {
+                const valeur = document.getElementById(idChamp).value.trim();
+                if (valeur) {
+                    modifications[nomChamp] = valeur;
+                }
+            }
+            
+            // Champs avec listes
+            const variantes = document.getElementById('modifVariantes').value.trim();
+            if (variantes) {
+                modifications.variantes_orthographiques = variantes.split(';').map(v => v.trim()).filter(v => v);
+            }
+            
+            const sensMultiple = document.getElementById('modifSensMultiple').value.trim();
+            if (sensMultiple) {
+                modifications.sens_multiple = sensMultiple.split('\n').map(s => s.trim()).filter(s => s);
+            }
+            
+            const synonymes = document.getElementById('modifSynonymes').value.trim();
+            if (synonymes) {
+                modifications.synonymes = synonymes.split(';').map(s => s.trim()).filter(s => s);
+            }
+            
+            const expressions = document.getElementById('modifExpressions').value.trim();
+            if (expressions) {
+                const expressionsListe = expressions.split('\n').map(e => e.trim()).filter(e => e);
+                modifications.expressions_associees = expressionsListe.map(expr => {
+                    if (expr.includes(':')) {
+                        const [expression, traduction] = expr.split(':', 2);
+                        return {
+                            expression: expression.trim(),
+                            traduction: traduction.trim()
+                        };
+                    }
+                    return { expression: expr, traduction: '' };
+                });
+            }
+            
+            try {
+                const response = await fetch(`/validation/api/valider/${currentMotId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        statut: statut,
+                        notes: notes,
+                        validateur: validateur,
+                        modifications: modifications
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    loadStats();
+                    loadMots();
+                    
+                    // Fermer le modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('validationModal'));
+                    modal.hide();
+                    
+                    // Réinitialiser les champs
+                    document.getElementById('validationNotes').value = '';
+                    
+                } else {
+                    alert('Erreur: ' + result.error);
+                }
+                
+            } catch (error) {
+                console.error('Erreur lors de la validation:', error);
+                alert('Une erreur est survenue lors de l\'enregistrement');
+            }
+        }
+
+
+        function updateCount() {
+            document.getElementById('countBadge').textContent = motsData.length;
+        }
+
+        function getStatutClass(statut) {
+            switch(statut) {
+                case 'valide': return 'statut-valide';
+                case 'a_reviser': return 'statut-revision';
+                case 'rejete': return 'statut-rejete';
+                default: return 'statut-attente';
+            }
+        }
+
+        function getStatutText(statut) {
+            switch(statut) {
+                case 'valide': return 'Validé';
+                case 'a_reviser': return 'À réviser';
+                case 'rejete': return 'Rejeté';
+                default: return 'En attente';
+            }
+        }
+
+        function showStatsModal() {
+            // Implémenter une modal de statistiques détaillées
+            alert('Fonctionnalité de statistiques détaillées à implémenter');
+        }
+
+        function exportData() {
+            // Exporter les données en CSV ou JSON
+            const dataStr = JSON.stringify(motsData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'dictionnaire-kabyle-validation.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+    </script>
+</body>
+</html>

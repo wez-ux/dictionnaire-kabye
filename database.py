@@ -1,6 +1,6 @@
 import os
 import json
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
@@ -31,6 +31,17 @@ class MotKabye(Base):
     verifie_par = Column(String(100))
     date_ajout = Column(DateTime, default=datetime.now)
     date_modification = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+    # Champs de validation
+    statut_validation = Column(String(50), default='en_attente')  # en_attente, valide, a_reviser, rejete
+    notes_validation = Column(Text)
+    date_validation = Column(DateTime)
+    
+    # Ajoutez un index pour les recherches de validation
+    __table_args__ = (
+        Index('idx_statut_validation', 'statut_validation'),
+        Index('idx_verifie_par', 'verifie_par'),
+    )
 
 def get_database_url():
     # En production sur Render, utiliser la variable d'environnement
