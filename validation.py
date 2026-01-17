@@ -115,8 +115,50 @@ def mots_a_valider():
     
     try:
         # Liste des lettres spéciales autorisées
-        lettres_speciales = ['b', 'c', 'd', 'ɖ', 'f', 'g', 'h', 'j', 'k', 'kp', 'l', 'm', 'n', 
-                           'ñ', 'ŋ', 'p', 's', 't', 'w', 'y', 'a', 'e', 'ɛ', 'i', 'o', 'ɔ', 'u', 'ɩ']
+        lettres_speciales = ['a', 'b', 'c', 'd', 'ɖ', 'e', 'ɛ', 'f', 'g', 'ɣ', 'h', 'i', 'ɩ', 'j', 'k', 'l', 'm', 'n', 
+                           'ñ', 'ŋ', 'o', 'ɔ', 'p', 's', 't', 'u', 'ʋ', 'v', 'w', 'y', 'z' ]
+        
+        # Fonction de tri personnalisée
+        def custom_sort_key(mot):
+            """
+            Crée une clé de tri selon l'ordre alphabétique spécifié.
+            Ignore la casse (majuscule/minuscule).
+            """
+            mot_kabye = mot.get('mot_kabye', '')
+            if not mot_kabye:
+                return ''
+            
+            mot_lower = mot_kabye.lower()
+            
+            # Créer une clé de tri
+            sort_key = []
+            
+            i = 0
+            while i < len(mot_lower):
+                # Vérifier les digrammes d'abord (comme 'kp')
+                if i + 1 < len(mot_lower) and mot_lower[i:i+2] == 'kp':
+                    # Attribuer une valeur spéciale pour 'kp' (après 'k')
+                    sort_key.append('k' + chr(1))  # k suivi d'un caractère spécial
+                    i += 2
+                else:
+                    char = mot_lower[i]
+                    # Trouver l'index dans la liste des lettres spéciales
+                    if char in lettres_speciales:
+                        # Utiliser l'index de la liste comme valeur de tri
+                        # Format: index sur 2 chiffres + le caractère lui-même
+                        index = lettres_speciales.index(char)
+                        sort_key.append(f"{index:02d}{char}")
+                    else:
+                        # Pour les caractères non dans la liste, les mettre à la fin
+                        sort_key.append(f"99{char}")
+                    i += 1
+            
+            # Retourner la clé de tri comme une chaîne
+            return ''.join(sort_key)
+        
+        # Fonction pour trier une liste de mots
+        def sort_mots_list(mots_list):
+            return sorted(mots_list, key=custom_sort_key)
         
         # Vérifier si les colonnes de validation existent
         if not colonnes_existantes(db_session):
@@ -127,9 +169,16 @@ def mots_a_valider():
             if lettre_filter and lettre_filter in lettres_speciales:
                 # Pour 'kp' qui a deux caractères
                 if lettre_filter == 'kp':
-                    query = query.filter(MotKabye.mot_kabye.ilike('kp%'))
+                    query = query.filter(
+                        (MotKabye.mot_kabye.ilike('kp%')) |
+                        (MotKabye.mot_kabye.ilike('Kp%')) |
+                        (MotKabye.mot_kabye.ilike('KP%'))
+                    )
                 else:
-                    query = query.filter(MotKabye.mot_kabye.ilike(f'{lettre_filter}%'))
+                    query = query.filter(
+                        (MotKabye.mot_kabye.ilike(f'{lettre_filter}%')) |
+                        (MotKabye.mot_kabye.ilike(f'{lettre_filter.upper()}%'))
+                    )
             
             # Appliquer la recherche textuelle
             if search_filter:
@@ -147,7 +196,7 @@ def mots_a_valider():
                 query = query.filter(MotKabye.verifie_par == None)
             # Pour 'tous', 'a_reviser', 'rejete' - pas de filtre car non supportés
             
-            mots = query.order_by(MotKabye.mot_kabye.asc(), MotKabye.date_ajout.asc()).all()
+            mots = query.all()  # Ne pas trier ici
             
             result = []
             for mot in mots:
@@ -172,6 +221,9 @@ def mots_a_valider():
                     'verifie_par': mot.verifie_par or '',
                     'date_validation': mot.date_modification.strftime("%Y-%m-%d") if mot.date_modification else ''
                 })
+            
+            # Trier avec notre fonction personnalisée
+            result = sort_mots_list(result)
             return jsonify(result)
         
         # Mode nouvelle base de données (avec colonnes de validation)
@@ -181,9 +233,16 @@ def mots_a_valider():
         if lettre_filter and lettre_filter in lettres_speciales:
             # Pour 'kp' qui a deux caractères
             if lettre_filter == 'kp':
-                query = query.filter(MotKabye.mot_kabye.ilike('kp%'))
+                query = query.filter(
+                    (MotKabye.mot_kabye.ilike('kp%')) |
+                    (MotKabye.mot_kabye.ilike('Kp%')) |
+                    (MotKabye.mot_kabye.ilike('KP%'))
+                )
             else:
-                query = query.filter(MotKabye.mot_kabye.ilike(f'{lettre_filter}%'))
+                query = query.filter(
+                    (MotKabye.mot_kabye.ilike(f'{lettre_filter}%')) |
+                    (MotKabye.mot_kabye.ilike(f'{lettre_filter.upper()}%'))
+                )
         
         # Appliquer les filtres de statut
         if statut_filter != 'tous':
@@ -213,7 +272,7 @@ def mots_a_valider():
         # Pour le filtre 'tous', on montre tous les mots
         # (pas de filtre supplémentaire)
         
-        mots = query.order_by(MotKabye.mot_kabye.asc(), MotKabye.date_ajout.asc()).all()
+        mots = query.all()  # Ne pas trier ici avec .order_by()
         
         result = []
         for mot in mots:
@@ -232,6 +291,8 @@ def mots_a_valider():
                 'date_validation': mot.date_validation.strftime("%Y-%m-%d") if mot.date_validation else ''
             })
         
+        # Trier avec notre fonction personnalisée
+        result = sort_mots_list(result)
         return jsonify(result)
         
     except Exception as e:
@@ -239,6 +300,7 @@ def mots_a_valider():
         return jsonify({'error': str(e), 'details': 'Erreur serveur lors du filtrage'}), 500
     finally:
         db_session.close()
+
 
 
 @validation_bp.route('/api/mot/<int:mot_id>')

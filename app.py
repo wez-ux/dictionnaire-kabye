@@ -1,3 +1,4 @@
+
 import secrets
 from flask import Flask, render_template, request, jsonify
 import json
@@ -442,7 +443,10 @@ def api_mots():
                 'expressions_associees': json_to_list(mot.expressions_associees),
                 'notes_usage': mot.notes_usage,
                 'image_url': mot.image_url,
+                'statut_validation': mot.statut_validation,
+                'notes_validation': mot.notes_validation,
                 'verifie_par': mot.verifie_par,
+                'date_validation': mot.date_validation,
                 'date_ajout': mot.date_ajout.strftime("%Y-%m-%d %H:%M:%S") if mot.date_ajout else '',
                 'date_modification': mot.date_modification.strftime("%Y-%m-%d %H:%M:%S") if mot.date_modification else ''
             })
