@@ -11,6 +11,7 @@ import cloudinary.api
 from dotenv import load_dotenv
 from database import get_session, MotKabye
 from sqlalchemy import or_, func
+from flask_cors import CORS
 
 from validation import validation_bp
 
@@ -18,6 +19,7 @@ from validation import validation_bp
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # CONFIGURER LA CLÉ SECRÈTE POUR LES SESSIONS
 app.secret_key = secrets.token_hex(32)  # 32 octets = 64 caractères hexadécimaux
