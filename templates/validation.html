@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Validation - Dictionnaire Kabyè</title>
+    <title>Validation - Dictionnaire Kabiyè</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -153,7 +153,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
         <div class="container-fluid">
             <a class="navbar-brand" href="/validation">
-                <i class="fas fa-book me-2"></i>Validation Kabyè
+                <i class="fas fa-book me-2"></i>Validation Kabiyè
             </a>
             <div class="d-flex align-items-center">
                 <!-- Afficher le nom du validateur -->
@@ -385,9 +385,9 @@
                             <!-- Colonne de gauche -->
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="modifMot" class="form-label">Mot kabyè *</label>
+                                    <label for="modifMot" class="form-label">Mot Kabiyè *</label>
                                     <input type="text" class="form-control modification-input" 
-                                        id="modifMot" placeholder="Mot kabyè">
+                                        id="modifMot" placeholder="Mot Kabiyè">
                                 </div>
                                 
                                 <div class="mb-3">
@@ -422,7 +422,7 @@
                                     <label for="modifSynonymes" class="form-label">Synonymes</label>
                                     <textarea class="form-control modification-input" 
                                             id="modifSynonymes" rows="2" 
-                                            placeholder="Synonymes en kabyè"></textarea>
+                                            placeholder="Synonymes en Kabiyè"></textarea>
                                     <small class="text-muted">Séparés par des points-virgules</small>
                                 </div>
                             </div>
@@ -451,7 +451,7 @@
                                     <label for="modifExemple" class="form-label">Exemple d'usage</label>
                                     <textarea class="form-control modification-input" 
                                             id="modifExemple" rows="2" 
-                                            placeholder="Exemple en kabyè"></textarea>
+                                            placeholder="Exemple en Kabiyè"></textarea>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -513,7 +513,7 @@
         // Variables globales
         let currentMotId = null;
         let motsData = [];
-        let currentValidateur = "Expert Kabyè";
+        let currentValidateur = "Expert Kabiyè";
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
@@ -694,7 +694,7 @@
                 <div class="mot-details">
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="detail-label">Mot kabyè</div>
+                            <div class="detail-label">Mot Kabiyè</div>
                             <div class="detail-value h5">${mot.mot_kabye}</div>
                             
                             <div class="detail-label">API</div>
@@ -826,7 +826,7 @@
             const traduction = document.getElementById('modifTraduction').value.trim();
             
             if (!motKabye || !traduction) {
-                alert('Le mot kabyè et la traduction française sont obligatoires');
+                alert('Le mot Kabiyè et la traduction française sont obligatoires');
                 return;
             }
             

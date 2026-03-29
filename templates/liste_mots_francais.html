@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des mots Français-Kabiyè</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c5530;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .nav a {
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .nav a:hover {
+            background: #5a6268;
+        }
+        .search-bar {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .search-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .search-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .search-group input, .search-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .alphabet-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        .alphabet-nav a {
+            padding: 8px 12px;
+            background: #e9ecef;
+            color: #495057;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        .alphabet-nav a:hover {
+            background: #dee2e6;
+        }
+        .alphabet-nav a.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .stats {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 5px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #f2f2f2;
+            font-weight: 600;
+        }
+        tr:hover {
+            background: #f5f5f5;
+        }
+        .mot-francais {
+            font-weight: 600;
+            color: #2c5530;
+        }
+        .traduction-kabye {
+            color: #666;
+        }
+        .edit-btn {
+            background: #ffc107;
+            color: #212529;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        .edit-btn:hover {
+            background: #e0a800;
+        }
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .delete-btn:hover {
+            background: #c82333;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            th, td {
+                padding: 8px;
+                font-size: 0.9rem;
+            }
+            .search-form {
+                flex-direction: column;
+            }
+            .search-group {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📖 Dictionnaire Français-Kabiyè</h1>
+        
+        <div class="nav">
+            <a href="/francais">➕ Ajouter un mot</a>
+            <a href="/">🔄 Dictionnaire Kabiyè-Français</a>
+            <a href="/validation-fr">Validation</a>
+            <a href="/francais/telecharger_json_francais">⬇️ Télécharger JSON</a>
+        </div>
+
+        <div class="search-bar">
+            <form method="GET" action="/francais/mots_francais" class="search-form">
+                <div class="search-group">
+                    <label for="q">Rechercher</label>
+                    <input type="text" id="q" name="q" value="{{ terme_recherche }}" 
+                           placeholder="Mot français ou traduction kabiyè...">
+                </div>
+                <div class="search-group">
+                    <label for="champ">Dans</label>
+                    <select id="champ" name="champ">
+                        <option value="tous" {% if champ_recherche == 'tous' %}selected{% endif %}>Tous les champs</option>
+                        <option value="francais" {% if champ_recherche == 'francais' %}selected{% endif %}>Mot français</option>
+                        <option value="kabye" {% if champ_recherche == 'kabye' %}selected{% endif %}>Traduction kabiyè</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <label>&nbsp;</label>
+                    <button type="submit">🔍 Rechercher</button>
+                </div>
+                {% if terme_recherche %}
+                <div class="search-group">
+                    <label>&nbsp;</label>
+                    <a href="/francais/mots_francais" style="display: inline-block; padding: 8px 16px; background: #6c757d; color: white; text-decoration: none; border-radius: 5px;">❌ Effacer</a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+
+        <div class="alphabet-nav">
+            {% for lettre in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' %}
+            <a href="/francais/mots_francais?initiale={{ lettre }}{% if terme_recherche %}&q={{ terme_recherche }}{% endif %}" 
+               {% if initiale_recherche == lettre %}class="active"{% endif %}>
+                {{ lettre }}
+            </a>
+            {% endfor %}
+            <a href="/francais/mots_francais" {% if not initiale_recherche %}class="active"{% endif %}>Tous</a>
+        </div>
+
+        <div class="stats">
+            📊 {{ nombre_resultats }} mot(s) trouvé(s)
+        </div>
+
+        {% if mots %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Mot Français</th>
+                    <th>Traduction Kabiyè</th>
+                    <th>Catégorie</th>
+                    <th>Contributeur</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mot in mots %}
+                <tr onclick="ouvrirModal({{ mot.id }})" style="cursor:pointer;">
+                    <td class="mot-francais">{{ mot.mot_francais }}</td>
+                    <td class="traduction-kabye">{{ mot.traduction_kabye }}</td>
+                    <td>{{ mot.categorie_grammaticale or '-' }}</td>
+                    <td>{{ mot.verifie_par or '-' }}</td>
+                    <td>
+                        <a href="/francais/editer_francais/{{ mot.id }}" class="edit-btn">✏️ Éditer</a>
+                        <button onclick="supprimerMot({{ mot.id }})" class="delete-btn">🗑️ Supprimer</button>
+                    </td>
+                </tr>
+                {% if mot.exemple_usage %}
+                <tr style="background: #f9f9f9;">
+                    <td colspan="5" style="font-size: 0.9rem; color: #666;">
+                        <strong>Exemple:</strong> {{ mot.exemple_usage[:100] }}{% if mot.exemple_usage|length > 100 %}...{% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <p>Aucun mot trouvé dans le dictionnaire.</p>
+            <p><a href="/francais" style="color: #4CAF50;">Ajoutez le premier mot !</a></p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- MODAL -->
+    <div id="modalMot" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000;">
+        <div style="background:white; max-width:700px; margin:50px auto; padding:20px; border-radius:10px; position:relative;">
+            
+            <button onclick="fermerModal()" style="position:absolute; top:10px; right:10px; background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:5px;">
+                ✖
+            </button>
+
+            <h2 id="modalTitre"></h2>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function supprimerMot(motId) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce mot ? Cette action est irréversible.')) {
+                fetch(`/francais/supprimer_francais/${motId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(result.message);
+                        location.reload();
+                    } else {
+                        alert('Erreur: ' + result.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Erreur de connexion');
+                });
+            }
+        }
+
+        function ouvrirModal(motId) {
+            fetch(`/francais/api/mot_francais/${motId}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('modalMot').style.display = 'block';
+                
+                document.getElementById('modalTitre').innerText = data.mot_francais;
+
+                let html = `
+                    <p><strong>Traduction :</strong> ${data.traduction_kabye}</p>
+                    <p><strong>Catégorie :</strong> ${data.categorie || '-'}</p>
+                    <p><strong>Synonymes :</strong> ${data.synonymes.join(', ') || '-'}</p>
+                    <p><strong>Antonymes :</strong> ${data.antonymes.join(', ') || '-'}</p>
+                    <p><strong>Exemple :</strong> ${data.exemple || '-'}</p>
+                    <p><strong>Traduction exemple :</strong> ${data.traduction_exemple || '-'}</p>
+                    <p><strong>Notes :</strong> ${data.notes || '-'}</p>
+                    <p><strong>Ajouté par :</strong> ${data.verifie_par || '-'}</p>
+                `;
+
+                if (data.image_url) {
+                    html += `<img src="${data.image_url}" style="max-width:100%; margin-top:10px; border-radius:5px;">`;
+                }
+
+                document.getElementById('modalContent').innerHTML = html;
+            })
+            .catch(() => {
+                alert("Erreur de chargement");
+            });
+        }
+
+        function fermerModal() {
+            document.getElementById('modalMot').style.display = 'none';
+        }
+
+        window.onclick = function(e) {
+            const modal = document.getElementById('modalMot');
+            if (e.target === modal) {
+                fermerModal();
+            }
+        }
+    </script>
+</body>
+</html>

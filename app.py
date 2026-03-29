@@ -13,7 +13,12 @@ from database import get_session, MotKabye
 from sqlalchemy import or_, func
 from flask_cors import CORS
 
+from utils.helpers import json_to_list, list_to_json, allowed_file, upload_image_cloudinary, supprimer_image_cloudinary
+
+from routes.francais import francais_bp
+
 from validation import validation_bp
+from validation_fr import validation_fr_bp
 
 # Charger les variables d'environnement
 load_dotenv()
@@ -46,6 +51,7 @@ MAINTENANCE_START = datetime(2024, 1, 1, 22, 0, 0)
 MAINTENANCE_DURATION = timedelta(hours=2)
 MAINTENANCE_MODE = False
 
+
 def get_maintenance_info():
     """Obtenir les informations de maintenance"""
     now = datetime.now()
@@ -77,33 +83,6 @@ def get_maintenance_info():
             'time_remaining': ''
         }
 
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def json_to_list(data):
-    """Convertir les données JSON stockées en liste"""
-    if not data:
-        return []
-    try:
-        # Si c'est déjà une liste, la retourner
-        if isinstance(data, list):
-            return data
-        # Sinon essayer de parser le JSON
-        return json.loads(data)
-    except json.JSONDecodeError:
-        # Si le JSON est invalide, essayer de le traiter comme une chaîne simple
-        if isinstance(data, str):
-            # Vérifier si c'est une chaîne avec des points-virgules
-            if ';' in data:
-                return [item.strip() for item in data.split(';') if item.strip()]
-            # Ou si c'est une chaîne simple
-            return [data.strip()] if data.strip() else []
-        return []
-
-def list_to_json(data_list):
-    """Convertir une liste en JSON pour stockage"""
-    return json.dumps(data_list, ensure_ascii=False) if data_list else None
 
 def initialiser_donnees():
     """Initialiser la base de données si nécessaire"""
@@ -117,36 +96,12 @@ def initialiser_donnees():
     finally:
         session.close()
 
-def upload_image_cloudinary(image_file):
-    """Uploader une image sur Cloudinary"""
-    try:
-        result = cloudinary.uploader.upload(
-            image_file,
-            folder="dictionnaire-kabye",
-            use_filename=True,
-            unique_filename=True,
-            overwrite=False,
-            resource_type="image"
-        )
-        return result['secure_url']
-    except Exception as e:
-        print(f"Erreur upload Cloudinary: {e}")
-        return None
-
-def supprimer_image_cloudinary(image_url):
-    """Supprimer une image de Cloudinary"""
-    try:
-        if image_url:
-            public_id = image_url.split('/')[-1].split('.')[0]
-            result = cloudinary.uploader.destroy(public_id)
-            return result.get('result') == 'ok'
-    except Exception as e:
-        print(f"Erreur suppression Cloudinary: {e}")
-    return False
 
 
 # Enregistrer le blueprint (ajoutez cette ligne avant les routes)
 app.register_blueprint(validation_bp, url_prefix='/validation')
+app.register_blueprint(validation_fr_bp, url_prefix='/validation-fr')
+app.register_blueprint(francais_bp, url_prefix='/francais')
 
 @app.route('/')
 def accueil():
@@ -208,7 +163,7 @@ def sauvegarder_mot():
         
         # Validation
         if not data.get('mot_kabye') or not data.get('traduction_francaise'):
-            return jsonify({'success': False, 'error': 'Mot kabyè et traduction française sont obligatoires'})
+            return jsonify({'success': False, 'error': 'Mot Kabiyè et traduction française sont obligatoires'})
         
         # Vérifier si c'est une édition
         mot_id = data.get('mot_id')
@@ -590,7 +545,7 @@ def sante():
         total_mots = session.query(MotKabye).count()
         return jsonify({
             'status': 'OK',
-            'message': 'Dictionnaire Kabyè en ligne',
+            'message': 'Dictionnaire Kabiyè en ligne',
             'timestamp': datetime.now().isoformat(),
             'total_mots': total_mots
         })

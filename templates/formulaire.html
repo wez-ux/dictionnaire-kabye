@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dictionnaire Kabyè Collaboratif</title>
+    <title>Dictionnaire Kabiyè Collaboratif</title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -223,7 +223,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>{% if edition %}✏️ Éditer{% else %}📝 Ajouter{% endif %} un mot Kabyè</h1>
+        <h1>{% if edition %}✏️ Éditer{% else %}📝 Ajouter{% endif %} un mot Kabiyè</h1>
         
         <div class="nav">
             <a href="/">➕ Ajouter un mot</a>
@@ -231,6 +231,7 @@
             <a href="/statistiques" style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 25px; margin: 0 10px;">
                 📊 Voir les Statistiques
             </a>
+            <a href="/francais">🔄 Dictionnaire Français-Kabiyè</a>
         </div>
 
         {% if edition and mot %}
@@ -245,7 +246,7 @@
             <input type="hidden" id="mot_id" name="mot_id" value="{{ mot.id }}">
             {% endif %}
             <div class="form-group">
-                <label for="mot_kabye">Mot Kabyè *</label>
+                <label for="mot_kabye">Mot Kabiyè *</label>
                 <input type="text" id="mot_kabye" name="mot_kabye" required 
                        value="{{ mot.mot_kabye if mot else '' }}"
                        placeholder="Ex: aalayu">
@@ -404,7 +405,7 @@
             <div class="form-group">
                 <label for="exemple_usage">Exemple d'usage</label>
                 <textarea id="exemple_usage" name="exemple_usage" rows="3" 
-                         placeholder="Phrase complète en kabyè avec contexte">{{ mot.exemple_usage if mot else '' }}</textarea>
+                         placeholder="Phrase complète en Kabiyè avec contexte">{{ mot.exemple_usage if mot else '' }}</textarea>
                 <small>Caractères spéciaux :</small>
                 <div class="caracteres-speciaux" data-target="exemple_usage">
                     <button type="button" class="btn-special">ɛ</button>
