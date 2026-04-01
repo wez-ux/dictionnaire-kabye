@@ -1,434 +1,618 @@
-<!-- templates/login.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Validation Français-Kabiyè</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Connexion | Validation Français-Kabiyè</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
-            background: linear-gradient(135deg, #73ea66 0%, #4ba295 100%);
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(145deg, #1a4d3a 0%, #0f2e24 50%, #1e3c2c 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
         }
-        
-        .login-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            overflow: hidden;
+
+        /* Effet de fond dynamique */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            top: -25%;
+            left: -25%;
+            background: radial-gradient(circle at 30% 40%, rgba(255,215,150,0.08) 0%, rgba(0,0,0,0) 70%);
+            pointer-events: none;
+        }
+
+        /* Conteneur principal */
+        .login-wrapper {
             width: 100%;
-            max-width: 450px;
-            animation: slideUp 0.5s ease-out;
+            max-width: 480px;
+            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
         }
-        
+
+        /* Carte principale */
+        .login-card {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(0px);
+            border-radius: 2rem;
+            overflow: hidden;
+            box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+
+        /* Header élégant */
         .login-header {
-            background: linear-gradient(135deg, #4a6fa5 0%, #2e4a76 100%);
-            color: white;
-            padding: 30px;
+            background: linear-gradient(125deg, #1e3c2c 0%, #2a6e46 100%);
+            padding: 2rem 1.8rem;
             text-align: center;
-        }
-        
-        .login-header h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        
-        .login-header p {
-            opacity: 0.9;
-            font-size: 0.9rem;
-        }
-        
-        .login-body {
-            padding: 40px;
-        }
-        
-        .form-group {
-            margin-bottom: 25px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        
-        .input-with-icon {
             position: relative;
         }
-        
-        .input-with-icon i {
+
+        .login-header::after {
+            content: '';
             position: absolute;
-            left: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #667eea;
-            font-size: 1.1rem;
-        }
-        
-        .input-with-icon input {
+            bottom: -20px;
+            left: 0;
             width: 100%;
-            padding: 15px 15px 15px 45px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            height: 40px;
+            background: rgba(255,255,255,0.98);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
         }
-        
-        .input-with-icon input:focus {
+
+        .icon-circle {
+            background: rgba(255,255,255,0.2);
+            width: 70px;
+            height: 70px;
+            border-radius: 60px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .icon-circle i {
+            font-size: 2.2rem;
+            color: white;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .login-header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.3px;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.85);
+            font-weight: 500;
+        }
+
+        /* Corps du formulaire */
+        .login-body {
+            padding: 2rem 1.8rem 2rem;
+            background: white;
+        }
+
+        /* Champs de formulaire modernes */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #4b5563;
+            margin-bottom: 0.6rem;
+        }
+
+        .input-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon i {
+            position: absolute;
+            left: 1rem;
+            font-size: 1.1rem;
+            color: #9ca3af;
+            transition: color 0.2s;
+            pointer-events: none;
+        }
+
+        .input-icon input {
+            width: 100%;
+            padding: 0.9rem 1rem 0.9rem 2.8rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 1.2rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: #fefefe;
+        }
+
+        .input-icon input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #2c5e3c;
+            box-shadow: 0 0 0 3px rgba(44, 94, 60, 0.12);
+            background: white;
         }
-        
-        .role-selection {
+
+        .input-icon input:focus + i {
+            color: #2c5e3c;
+        }
+
+        /* Sélection des rôles en style moderne */
+        .role-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #4b5563;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .role-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 0.8rem;
         }
-        
-        .role-option {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
+
+        .role-card {
+            background: #f9fafb;
+            border: 1.5px solid #eef2f6;
+            border-radius: 1rem;
+            padding: 1rem 0.8rem;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 0.5rem;
         }
-        
-        .role-option i {
-            font-size: 1.5rem;
-            color: #667eea;
+
+        .role-card i {
+            font-size: 1.8rem;
+            color: #6b7280;
+            transition: all 0.2s;
         }
-        
-        .role-option:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
+
+        .role-card span {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #374151;
         }
-        
-        .role-option.selected {
-            border-color: #667eea;
-            background: #667eea;
+
+        .role-card small {
+            font-size: 0.7rem;
+            color: #6c7a89;
+        }
+
+        .role-card:hover {
+            border-color: #2c5e3c;
+            background: #f0fdf4;
+            transform: translateY(-2px);
+        }
+
+        .role-card.selected {
+            background: #2c5e3c;
+            border-color: #2c5e3c;
+        }
+
+        .role-card.selected i,
+        .role-card.selected span,
+        .role-card.selected small {
             color: white;
         }
-        
-        .role-option.selected i {
-            color: white;
-        }
-        
+
         input[type="radio"] {
             display: none;
         }
-        
-        .submit-btn {
+
+        /* Bouton principal */
+        .btn-login {
             width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(105deg, #2c5e3c 0%, #1f8a4c 100%);
             border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 1rem;
+            border-radius: 2rem;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 0.6rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            margin-top: 1.2rem;
+            box-shadow: 0 4px 12px rgba(44, 94, 60, 0.25);
         }
-        
-        .submit-btn:hover {
+
+        .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 20px rgba(44, 94, 60, 0.35);
         }
-        
-        .submit-btn:active {
-            transform: translateY(0);
+
+        .btn-login:active {
+            transform: translateY(1px);
         }
-        
-        .message {
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 20px;
-            text-align: center;
-            font-size: 0.9rem;
-            display: none;
+
+        /* Messages */
+        .message-container {
+            margin-top: 1rem;
         }
-        
-        .message.error {
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
-            display: block;
-        }
-        
-        .message.success {
-            background: #e8f7ee;
-            color: #2a8;
-            border: 1px solid #bde8d0;
-            display: block;
-        }
-        
-        .login-footer {
-            text-align: center;
-            margin-top: 25px;
-            padding-top: 25px;
-            border-top: 1px solid #eee;
-            color: #666;
+
+        .alert-message {
+            padding: 0.9rem 1rem;
+            border-radius: 1rem;
             font-size: 0.85rem;
-        }
-        
-        .back-link {
-            display: inline-block;
-            margin-top: 10px;
-            color: #667eea;
-            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-weight: 500;
+            animation: shakeFade 0.3s ease;
         }
-        
-        .back-link:hover {
-            text-decoration: underline;
+
+        .alert-message.error {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-left: 4px solid #dc2626;
         }
-        
-        @keyframes slideUp {
+
+        .alert-message.success {
+            background: #e0f2e7;
+            color: #166534;
+            border-left: 4px solid #2c5e3c;
+        }
+
+        /* Footer */
+        .login-footer {
+            margin-top: 1.8rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #edf2f7;
+            text-align: center;
+        }
+
+        .login-footer p {
+            font-size: 0.75rem;
+            color: #6c7a8f;
+            margin-bottom: 0.8rem;
+        }
+
+        .back-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f1f5f9;
+            padding: 0.5rem 1.2rem;
+            border-radius: 2rem;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #2d3e50;
+            transition: all 0.2s;
+        }
+
+        .back-home:hover {
+            background: #e2e8f0;
+            transform: translateX(-3px);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(25px);
             }
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
-        
-        @media (max-width: 480px) {
-            .login-container {
-                border-radius: 15px;
+
+        @keyframes shakeFade {
+            0% { transform: translateX(-4px); opacity: 0; }
+            25% { transform: translateX(4px); }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 550px) {
+            body {
+                padding: 1rem;
             }
-            
             .login-header {
-                padding: 25px 20px;
+                padding: 1.5rem 1rem;
             }
-            
+            .login-header h1 {
+                font-size: 1.5rem;
+            }
+            .icon-circle {
+                width: 55px;
+                height: 55px;
+            }
+            .icon-circle i {
+                font-size: 1.6rem;
+            }
             .login-body {
-                padding: 30px 20px;
+                padding: 1.5rem;
             }
-            
-            .role-selection {
+            .role-grid {
+                gap: 0.6rem;
+            }
+            .role-card {
+                padding: 0.7rem 0.4rem;
+            }
+            .role-card i {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .role-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* Spinner */
+        .spinner-icon {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
+<div class="login-wrapper">
+    <div class="login-card">
         <div class="login-header">
-            <h1><i class="fas fa-lock"></i> Accès Validation</h1>
-            <p>Interface sécurisée pour la validation des mots Français</p>
+            <div class="icon-circle">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>Accès Validation</h1>
+            <p>Interface sécurisée · Modération collaborative</p>
         </div>
-        
+
         <div class="login-body">
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="nomValidateur"><i class="fas fa-user"></i> Nom du validateur</label>
-                    <div class="input-with-icon">
+                    <label><i class="fas fa-user-check" style="margin-right: 6px;"></i> Identifiant validateur</label>
+                    <div class="input-icon">
                         <i class="fas fa-user-circle"></i>
                         <input type="text" 
                                id="nomValidateur" 
-                               placeholder="Ex: Benjamin, Expert Kab..." 
+                               placeholder="Votre nom ou pseudonyme" 
                                required
                                autocomplete="off"
                                autofocus>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
-                    <label><i class="fas fa-user-tag"></i> Rôle</label>
-                    <div class="role-selection">
-                        <label class="role-option" for="role_expert">
+                    <div class="role-label"><i class="fas fa-user-tag"></i> Niveau de validation</div>
+                    <div class="role-grid" id="roleGrid">
+                        <label class="role-card" for="role_expert">
                             <input type="radio" id="role_expert" name="role" value="expert" checked>
                             <i class="fas fa-user-graduate"></i>
                             <span>Expert linguistique</span>
+                            <small>Réviseur principal</small>
                         </label>
-                        
-                        <label class="role-option" for="role_validateur">
+                        <label class="role-card" for="role_validateur">
                             <input type="radio" id="role_validateur" name="role" value="validateur">
                             <i class="fas fa-check-circle"></i>
                             <span>Validateur confirmé</span>
+                            <small>Validation secondaire</small>
                         </label>
                     </div>
                 </div>
-                
+
                 <div class="form-group">
-                    <label for="motDePasse"><i class="fas fa-key"></i> Mot de passe (optionnel)</label>
-                    <div class="input-with-icon">
+                    <label><i class="fas fa-key"></i> Code de sécurité (optionnel)</label>
+                    <div class="input-icon">
                         <i class="fas fa-lock"></i>
                         <input type="password" 
                                id="motDePasse" 
-                               placeholder="Pour usage futur..."
+                               placeholder="Réservé aux réviseurs"
                                autocomplete="off">
                     </div>
+                    <small style="display: block; margin-top: 0.3rem; font-size: 0.7rem; color: #8b9cb0;">
+                        <i class="fas fa-info-circle"></i> Pour usage futur sécurisé
+                    </small>
                 </div>
-                
-                <div id="message" class="message"></div>
-                
-                <button type="submit" class="submit-btn">
+
+                <div id="messageArea" class="message-container"></div>
+
+                <button type="submit" class="btn-login" id="submitBtn">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>Accéder à la validation</span>
                 </button>
             </form>
-            
+
             <div class="login-footer">
-                <p>Cette interface est réservée aux validateurs autorisés du projet Kabiyè Numérique.</p>
-                <a href="/" class="back-link">
+                <p><i class="fas fa-globe-africa"></i> Projet Kabiyè Numérique — Préservation linguistique</p>
+                <a href="/francais" class="back-home">
                     <i class="fas fa-arrow-left"></i>
                     Retour à l'accueil
                 </a>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        // Gestion de la sélection des rôles
-        document.querySelectorAll('.role-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.role-option').forEach(o => {
-                    o.classList.remove('selected');
-                });
-                this.classList.add('selected');
-                const radio = this.querySelector('input[type="radio"]');
-                radio.checked = true;
-            });
+<script>
+    // Gestion sélection rôles avec animation
+    const roleCards = document.querySelectorAll('.role-card');
+    const radioInputs = document.querySelectorAll('input[name="role"]');
+
+    function updateRoleSelection(selectedRadio) {
+        roleCards.forEach(card => {
+            const radioInside = card.querySelector('input[type="radio"]');
+            if (radioInside === selectedRadio) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
         });
+    }
 
-        // Gestion du formulaire
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const nomValidateur = document.getElementById('nomValidateur').value.trim();
-            const role = document.querySelector('input[name="role"]:checked').value;
-            
-            const messageDiv = document.getElementById('message');
-            
-            // Validation simple
-            if (!nomValidateur) {
-                showMessage('Veuillez entrer votre nom', 'error');
-                return;
+    roleCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const radio = card.querySelector('input[type="radio"]');
+            if (radio) {
+                radio.checked = true;
+                updateRoleSelection(radio);
             }
-            
-            // Liste des validateurs autorisés (vous pouvez aussi vérifier côté serveur)
-            const validateursAutorises = {
-                'Benjamin': 'expert',
-                'Expert': 'expert', 
-                'Test': 'validateur'
-            };
-            
-            // Vérifier si le validateur est autorisé
-            if (!validateursAutorises[nomValidateur]) {
-                showMessage('Nom de validateur non autorisé', 'error');
-                return;
-            }
-            
-            // Vérifier si le rôle correspond
-            if (validateursAutorises[nomValidateur] !== role) {
-                showMessage('Rôle incorrect pour ce validateur', 'error');
-                return;
-            }
-            
-            // Simulation de chargement
-            const submitBtn = document.querySelector('.submit-btn');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion en cours...';
-            submitBtn.disabled = true;
-            
-            // Enregistrer les infos de connexion
-            localStorage.setItem('validateur_nom', nomValidateur);
+        });
+    });
+
+    // Initialiser sélection par défaut
+    const defaultChecked = document.querySelector('input[name="role"]:checked');
+    if (defaultChecked) updateRoleSelection(defaultChecked);
+
+    // Afficher message
+    function showMessage(text, type) {
+        const container = document.getElementById('messageArea');
+        container.innerHTML = `
+            <div class="alert-message ${type}">
+                <i class="fas ${type === 'error' ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i>
+                <span>${text}</span>
+            </div>
+        `;
+        if (type === 'error') {
+            setTimeout(() => {
+                if (container.firstChild) container.innerHTML = '';
+            }, 4500);
+        }
+    }
+
+    // Simuler une liste d'autorisations (plus réaliste pour démo, mais backend reste maître)
+    // Vous pouvez remplacer cette liste par un appel API plus tard
+    const validateursAutorises = {
+        'Benjamin': 'expert',
+        'Expert Kab': 'expert',
+        'Mamadou': 'expert',
+        'Aisha': 'validateur',
+        'Jean': 'validateur',
+        'Fatou': 'validateur',
+        'Test': 'validateur'
+    };
+
+    // Vérification + simulation connexion
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const nom = document.getElementById('nomValidateur').value.trim();
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const motDePasse = document.getElementById('motDePasse').value;
+        
+        const messageDiv = document.getElementById('messageArea');
+        
+        if (!nom) {
+            showMessage('Veuillez entrer votre nom de validateur', 'error');
+            return;
+        }
+        
+        // Vérification côté client (simple pour UX, backend fera la vraie vérif)
+        // On accepte quelques noms pour démo, sinon message explicite
+        const autorisation = validateursAutorises[nom];
+        if (!autorisation) {
+            showMessage('❌ Accès non autorisé. Contactez l’administrateur du dictionnaire.', 'error');
+            return;
+        }
+        
+        if (autorisation !== role) {
+            showMessage(`⚠️ Le rôle "${role === 'expert' ? 'Expert' : 'Validateur'}" ne correspond pas à votre profil.`, 'error');
+            return;
+        }
+        
+        // Simuler chargement
+        const submitBtn = document.getElementById('submitBtn');
+        const originalHtml = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner spinner-icon"></i> Vérification...';
+        submitBtn.disabled = true;
+        
+        // Simuler latence réseau / appel API
+        setTimeout(() => {
+            // Enregistrer session locale (pour faciliter l'expérience)
+            localStorage.setItem('validateur_nom', nom);
             localStorage.setItem('validateur_role', role);
             localStorage.setItem('validateur_connexion', new Date().toISOString());
             
-            // Redirection
-            setTimeout(() => {
-                const params = new URLSearchParams({
-                    validateur: encodeURIComponent(nomValidateur),
-                    role: role
-                });
-                
-                window.location.href = `/validation-fr/?${params.toString()}`;
-            }, 800);
-        });
-
-        // Ajoutez aussi au début du script pour gérer les erreurs d'URL
-        window.addEventListener('load', function() {
-            // Vérifier si une erreur est passée en paramètre
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('error') === 'unauthorized') {
-                showMessage('Accès non autorisé. Veuillez vous connecter avec un compte valide.', 'error');
-            }
-        });
-        
-        function showMessage(text, type) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = text;
-            messageDiv.className = `message ${type}`;
-            messageDiv.style.display = 'block';
+            // Redirection vers page validation avec paramètres
+            const params = new URLSearchParams({
+                validateur: encodeURIComponent(nom),
+                role: role,
+                timestamp: Date.now()
+            });
             
-            if (type === 'error') {
-                setTimeout(() => {
-                    messageDiv.style.display = 'none';
-                }, 4000);
+            window.location.href = `/validation-fr/?${params.toString()}`;
+        }, 700);
+    });
+
+    // Remplissage automatique si déjà connecté
+    window.addEventListener('load', function() {
+        const savedNom = localStorage.getItem('validateur_nom');
+        if (savedNom) {
+            document.getElementById('nomValidateur').value = savedNom;
+        }
+        const savedRole = localStorage.getItem('validateur_role');
+        if (savedRole) {
+            const radioToCheck = document.querySelector(`input[name="role"][value="${savedRole}"]`);
+            if (radioToCheck) {
+                radioToCheck.checked = true;
+                updateRoleSelection(radioToCheck);
             }
         }
         
-        // Remplir automatiquement si déjà connecté
-        window.addEventListener('load', function() {
-            const savedNom = localStorage.getItem('validateur_nom');
-            if (savedNom) {
-                document.getElementById('nomValidateur').value = savedNom;
-                
-                const savedRole = localStorage.getItem('validateur_role');
-                if (savedRole) {
-                    const radio = document.querySelector(`input[value="${savedRole}"]`);
-                    if (radio) {
-                        radio.checked = true;
-                        radio.parentElement.classList.add('selected');
-                    }
-                }
-            }
+        // Gestion des erreurs d'URL (accès non autorisé)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('error') === 'unauthorized') {
+            showMessage('Session expirée ou accès non autorisé. Veuillez vous reconnecter.', 'error');
+        }
+    });
+    
+    // Effet d'élégance sur les champs
+    const inputs = document.querySelectorAll('.input-icon input');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'translateX(2px)';
         });
-        
-        // Animation d'entrée
-        document.querySelectorAll('.input-with-icon input').forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.02)';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'translateX(0)';
         });
-    </script>
+    });
+    
+    // Petite animation d'entrée
+    document.querySelector('.login-card').style.animation = 'fadeInUp 0.5s ease-out';
+</script>
 </body>
 </html>
