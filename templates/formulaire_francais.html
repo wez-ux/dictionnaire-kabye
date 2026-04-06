@@ -559,6 +559,14 @@
                         <textarea id="expressions_associees" name="expressions_associees" rows="3"
                             placeholder="Format: expression française:traduction kabiyè (une par ligne)">{% if mot and mot.expressions_associees %}{% for expr in mot.expressions_associees %}{{ expr.expression }}:{{ expr.traduction }}{% if not loop.last %}&#10;{% endif %}{% endfor %}{% endif %}</textarea>
                         <small><i class="fas fa-info-circle"></i> Exemple: avoir la pêche:lɔɔnɩ kʋdɔŋ</small>
+                        <div class="special-chars" data-target="expressions_associees">
+                            <button type="button" class="char-btn">ɛ</button><button type="button" class="char-btn">ɩ</button><button type="button" class="char-btn">ɔ</button>
+                            <button type="button" class="char-btn">ŋ</button><button type="button" class="char-btn">ʋ</button><button type="button" class="char-btn">ɣ</button>
+                            <button type="button" class="char-btn">ɖ</button><button type="button" class="char-btn">ñ</button><button type="button" class="char-btn">Ɛ</button>
+                            <button type="button" class="char-btn">Ɩ</button><button type="button" class="char-btn">Ɔ</button><button type="button" class="char-btn">Ŋ</button>
+                            <button type="button" class="char-btn">Ʋ</button><button type="button" class="char-btn">Ɣ</button><button type="button" class="char-btn">Ɖ</button>
+                            <button type="button" class="char-btn">Ñ</button>
+                        </div>
                     </div>
 
                     <!-- Notes d'usage -->
