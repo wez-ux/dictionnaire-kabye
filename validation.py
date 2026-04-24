@@ -46,7 +46,8 @@ def colonnes_existantes(db_session):
 VALIDATEURS_AUTORISES = {
     'Benjamin': {'role': 'expert', 'nom_complet': 'Benjamin Officiel'},
     'Expert': {'role': 'expert', 'nom_complet': 'Expert Kabyè'},
-    'Test': {'role': 'validateur', 'nom_complet': 'Testeur'}
+    'Test': {'role': 'validateur', 'nom_complet': 'Testeur'},
+    'BINIDI': {'role': 'validateur', 'nom_complet': 'BINIDI Eugène'},
 }
 
 def is_validateur_autorise(nom_validateur, role=None):
@@ -96,7 +97,8 @@ def mots_a_valider():
     validateur = request.args.get('validateur', '')
     statut_filter = request.args.get('statut', 'tous')
     search_filter = request.args.get('search', '')
-    lettre_filter = request.args.get('lettre', '')  # Nouveau paramètre
+    lettre_filter = request.args.get('lettre', '')  
+    contributeur_filter = request.args.get('contributeur', '') 
     
     # Si pas dans les paramètres, essayer de le déduire de l'URL de référence
     if not validateur:
@@ -258,6 +260,12 @@ def mots_a_valider():
                 query = query.filter(MotKabye.statut_validation == 'a_reviser')
             elif statut_filter == 'rejete':
                 query = query.filter(MotKabye.statut_validation == 'rejete')
+        
+        # Appliquer le filtre par contributeur
+        if contributeur_filter and contributeur_filter != 'tous':
+            # Utilisez 'creer_par' comme nom de colonne (à adapter selon votre modèle)
+            query = query.filter(MotKabye.verifie_par == contributeur_filter)
+        
         
         # Appliquer la recherche
         if search_filter:
@@ -452,6 +460,25 @@ def valider_mot(mot_id):
         return jsonify({'success': False, 'error': str(e)}), 500
     finally:
         db_session.close()
+
+
+@validation_bp.route('/api/contributeurs')
+def get_contributeurs():
+    """Récupérer la liste des contributeurs uniques"""
+    db_session = get_session()
+    try:
+        # Récupérer tous les mots avec leur créateur
+        mots = db_session.query(MotKabye.verifie_par).distinct().filter(MotKabye.verifie_par != None).all()
+        contributeurs = [mot.verifie_par for mot in mots if mot.verifie_par]
+        return jsonify(sorted(contributeurs))
+    except Exception as e:
+        print(f"Erreur dans get_contributeurs: {e}")
+        return jsonify([])
+    finally:
+        db_session.close()
+
+
+
 
 @validation_bp.route('/api/statistiques-validation')
 def statistiques_validation():

@@ -666,6 +666,11 @@
                     <div class="detail-label"><i class="fas fa-pen-alt"></i> Notes / contexte</div>
                     <div class="detail-value">${escapeHtml(data.notes) || '—'}</div>
                 </div>
+                <div class="detail-section">
+                    <div class="detail-label">Informations techniques:</div>
+                    Ajouté par <strong>${data.verifie_par}</strong> le ${data.date_ajout}
+                    ${data.date_modification ? `<br>Dernière modification: ${data.date_modification}` : ''}
+                </div>
                 <div class="detail-block">
                     <div class="detail-label"><i class="fas fa-user-check"></i> Contributeur / Validateur</div>
                     <div class="detail-value">${escapeHtml(data.verifie_par) || '—'}</div>

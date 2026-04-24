@@ -36,6 +36,7 @@ class MotKabye(Base):
     statut_validation = Column(String(50), default='en_attente')  # en_attente, valide, a_reviser, rejete
     notes_validation = Column(Text)
     date_validation = Column(DateTime)
+    # valider_par = Column(String(100))
     
     # Ajoutez un index pour les recherches de validation
     __table_args__ = (

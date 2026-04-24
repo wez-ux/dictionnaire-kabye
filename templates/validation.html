@@ -293,7 +293,10 @@
                         <div class="col-md-4">
                             <label for="filtreContributeur" class="form-label">Contributeur</label>
                             <select id="filtreContributeur" class="form-select">
-                                <option value="tous">Tous les contributeurs</option>
+                                <option value="tous">Tous les Contributeurs</option>
+                                <option value="Benjamin">Benjamin</option>
+                                <option value="BINIDI">BINIDI</option>
+
                             </select>
                         </div>
                         <!-- <div class="col-md-4">
@@ -520,6 +523,7 @@
             loadStats();
             loadMots();
             setupEventListeners();
+            loadContributeurs();
             
             // Définir le nom du validateur
             const urlParams = new URLSearchParams(window.location.search);
@@ -536,6 +540,7 @@
             document.getElementById('filtreStatut').addEventListener('change', loadMots);
             document.getElementById('filtreLettre').addEventListener('change', loadMots);
             document.getElementById('searchBtn').addEventListener('click', loadMots);
+            document.getElementById('filtreContributeur').addEventListener('change', loadMots); 
             document.getElementById('searchInput').addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') loadMots();
             });
@@ -544,6 +549,32 @@
             document.getElementById('saveValidation').addEventListener('click', saveValidation);
             document.getElementById('statsBtn').addEventListener('click', showStatsModal);
             document.getElementById('exportBtn').addEventListener('click', exportData);
+        }
+
+        // Ajoutez cette fonction pour charger la liste des contributeurs
+        async function loadContributeurs() {
+            try {
+                const response = await fetch('/validation/api/contributeurs');
+                const contributeurs = await response.json();
+                
+                const selectContributeur = document.getElementById('filtreContributeur');
+                
+                // Vider le select (garder l'option "Tous")
+                while (selectContributeur.options.length > 1) {
+                    selectContributeur.remove(1);
+                }
+                
+                // Ajouter les contributeurs
+                contributeurs.forEach(contributeur => {
+                    const option = document.createElement('option');
+                    option.value = contributeur;
+                    option.textContent = contributeur;
+                    selectContributeur.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Erreur lors du chargement des contributeurs:', error);
+            }
         }
 
         async function loadStats() {
@@ -570,12 +601,11 @@
                 const statut = document.getElementById('filtreStatut').value;
                 const search = document.getElementById('searchInput').value;
                 const lettre = document.getElementById('filtreLettre').value;
+                const contributeur = document.getElementById('filtreContributeur').value; // Nouveau
                 
-                // Récupérer le validateur depuis l'URL
                 const urlParams = new URLSearchParams(window.location.search);
                 const validateur = urlParams.get('validateur');
                 
-                // Construire l'URL avec TOUS les paramètres nécessaires
                 let url = `/validation/api/mots-a-valider?validateur=${encodeURIComponent(validateur)}`;
                 
                 if (statut !== 'tous') {
@@ -588,6 +618,11 @@
                 
                 if (lettre) {
                     url += `&lettre=${encodeURIComponent(lettre)}`;
+                }
+                
+                // Ajouter le filtre contributeur
+                if (contributeur && contributeur !== 'tous') {
+                    url += `&contributeur=${encodeURIComponent(contributeur)}`;
                 }
                 
                 const response = await fetch(url);

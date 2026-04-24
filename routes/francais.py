@@ -330,7 +330,10 @@ def get_mot_francais(mot_id):
             'traduction_exemple': mot.traduction_exemple,
             'notes': mot.notes_usage,
             'image_url': mot.image_url,
-            'verifie_par': mot.verifie_par
+            'verifie_par': mot.verifie_par,
+            'date_ajout': mot.date_ajout.strftime("%Y-%m-%d %H:%M:%S") if mot.date_ajout else '',
+            'date_modification': mot.date_modification.strftime("%Y-%m-%d %H:%M:%S") if mot.date_modification else '',
+            'date_validation': mot.date_validation
         })
     finally:
         session.close()

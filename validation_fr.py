@@ -44,7 +44,9 @@ def colonnes_existantes(db_session):
 VALIDATEURS_AUTORISES = {
     'Benjamin': {'role': 'expert', 'nom_complet': 'Benjamin Officiel'},
     'Expert': {'role': 'expert', 'nom_complet': 'Expert Kabyè'},
-    'Test': {'role': 'validateur', 'nom_complet': 'Testeur'}
+    'Test': {'role': 'validateur', 'nom_complet': 'Testeur'},
+    'BINIDI': {'role': 'validateur', 'nom_complet': 'BINIDI Eugène'},
+
 }
 
 def is_validateur_autorise(nom_validateur, role=None):
